@@ -1,2 +1,2 @@
-# totallynotmeme.github.io
-a silly "website" for me i guess
+# sup
+what are you doing here? get out
