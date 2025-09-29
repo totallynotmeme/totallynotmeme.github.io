@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <title>Totally not a website</title>
+    <style>
+      body {
+        background-color: black;
+        color: white;
+        overflow: hidden;
+      }
+      div {
+        width: 350px;
+        margin: 100px auto;
+        margin-top: 40vh;
+        padding: 20px;
+        text-align: center;
+        font-family: arial;
+        border-style: solid;
+        border-radius: 40px;
+        background: black;
+      }
+      #bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        z-index: -999;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="bg"></canvas>
+    <div>
+      <h1>Silly website</h1>
+      <p>Something will be here soon, but not now.</p>
+    </div>
+  <script>
+    const bg = document.getElementById("bg");
+    bg.width = 1;
+    bg.height = 1;
+    const ctx = bg.getContext("2d");
+    function frame(t) {
+      t = t / 1000;
+      ctx.fillStyle = "rgb(" + Math.abs(Math.sin(t)) * 50 + ", 0, 0)";
+      ctx.fillRect(0, 0, 1, 1);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  </script>
+  </body>
+</html>
