@@ -64,7 +64,6 @@
       #panel_inner span {
         font-size: large;
         color: #09f;
-        width: 36%;
         text-align: center;
         padding-left: 7%;
         padding-right: 7%;
@@ -107,7 +106,7 @@
       <div id="panel_inner">
         <a href="">placeholder link</a>
         <span id="splash"></span>
-        <span id="cursor" style="position: absolute;">█</span>
+        <span id="cursor" style="display: none;">█</span>
         <a href="https://github.com/totallynotmeme">my github account</a>
       </div>
     </div>
@@ -130,7 +129,7 @@
     const chosen_text = texts[Math.floor(Math.random() * texts.length)];
     var cursor_shown = false;
     splash.textContent = chosen_text;
-    cursor.style = "margin-left: " + (chosen_text.length + 1) + "ch;";
+    cursor.style = "margin-left: " + (chosen_text.length + 1) + "ch; padding: 0;";
     document.documentElement.scrollTop = 0;
     bg.width = 1;
     bg.height = 1;
@@ -140,7 +139,7 @@
       if (t % 1 < 0.5) {
         if (!cursor_shown) {
           cursor_shown = true;
-          cursor.style = "margin-left: " + (splash.textContent.length + 1) + "ch;";
+          cursor.style.marginLeft = (splash.textContent.length + 1) + "ch";
           cursor.style.display = "";
         }
       } else {
