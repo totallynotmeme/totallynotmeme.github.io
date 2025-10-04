@@ -83,7 +83,7 @@
         position: absolute;
         left: 0;
         right: 0;
-        top: 100vh;
+        top: 200vh;
         margin: auto;
         padding-bottom: 50px;
         text-align: center;
@@ -124,17 +124,32 @@
         "programming random stuff",
         "Achievement get! How did we get here?",
         "i like blue... and berries.",
-        "insert funny text here"
+        "insert funny text here",
+        "written fully in notepad++",
     ]
     const chosen_text = texts[Math.floor(Math.random() * texts.length)];
     var cursor_shown = false;
+    var e_blur = 0;
+    var e_bright = 0;
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    bg.width = width;
+    bg.height = height;
     splash.textContent = chosen_text;
     cursor.style = "margin-left: " + (chosen_text.length + 1) + "ch; padding: 0;";
     document.documentElement.scrollTop = 0;
-    bg.width = 1;
-    bg.height = 1;
     const ctx = bg.getContext("2d");
     function frame(t) {
+      // syncing up stuff
+      if (width !== window.innerWidth) {
+        width = window.innerWidth;
+        bg.width = width;
+      }
+      if (height !== window.innerHeight) {
+        height = window.innerHeight;
+        bg.height = height;
+      }
+      // actual code
       t = t / 1000;
       if (t % 1 < 0.5) {
         if (!cursor_shown) {
@@ -148,11 +163,21 @@
           cursor.style.display = "none";
         }
       }
-      var col = Math.abs(Math.sin(t))
-      ctx.fillStyle = "rgb(0, " + col*30 + ", " + col*50 + ")";
-      ctx.fillRect(0, 0, 1, 1);
+      e_blur = document.documentElement.scrollTop / height * 50 + 10;
+      e_bright = Math.max(1 - document.documentElement.scrollTop / height, 0);
+      bg.style.filter = "blur(" + e_blur + "px) brightness(" + e_bright + ")";
+      if (e_bright > 0) {
+        for (var x=0; x<width/128; x++) {
+          for (var y=0; y<height/128; y++) {
+            var col = Math.max(Math.sin(2*x - 4*y - t), 0);
+            ctx.fillStyle = "rgb(0, " + col*30 + ", " + col*50 + ")";
+            ctx.fillRect(x*128 + 8, y*128 + 8, 112, 112);
+          }
+        }
+      }
       requestAnimationFrame(frame);
     }
+    // entering the loop
     requestAnimationFrame(frame);
   </script>
   </body>
