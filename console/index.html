@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta name="darkreader-lock">
+    <title>/console</title>
+    <style>
+      * {
+        scrollbar-width: none;
+      }
+      body {
+        background-color: black;
+        overflow: hidden;
+        font-family: monospace;
+        color: #ffa;
+        text-align: center;
+        font-size: xxx-large;
+      }
+      #bg {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+        max-width: 100%;
+        max-height: 100vh;
+        z-index: -999;
+        aspect-ratio: 4/3;
+        filter: blur(1px);
+      }
+      #sorry {
+          position: absolute;
+          top: 47%;
+          left: 0;
+          right: 0;
+          background: black;
+          border-style: solid;
+          padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="bg">Enable javascript to view this page</canvas>
+    <a id="sorry" style="display: none;">Sorry, this page does not support touch screen controls for now. Please use a keyboard</a>
+  <script>
+    const bg = document.getElementById("bg");
+    const sorry = document.getElementById("sorry");
+    const ctx = bg.getContext("2d");
+    bg.width = 768;
+    bg.height = 544;
+    ctx.font = "18px monospace";
+    var prevt = 0;
+    var width = window.innerWidth;
+    var height = window.innerHeight;
+    var rows = 25;
+    var cols = 75;
+    var screen = Array(rows*cols).fill(" ");
+    var temp_text = 'ASSIGN H HELLO' + ' '.repeat(61) + 'PRINT $H, "WORLD"'
+    screen = temp_text.split("").concat(screen.slice(temp_text.length))
+    var variables = {};
+    var curpos = 0;
+    var curflicker = 0;
+    function frame(t) {
+      var dt = t - prevt;
+      ctx.fillStyle = "#ffffaa";
+      ctx.fillRect(0, 0, 768, 544);
+      ctx.fillStyle = "#000000";
+      ctx.fillRect(2, 2, 764, 540);
+      ctx.fillStyle = "#ffffaa";
+      for (var y=0; y<rows; y++) {
+        for (var x=0; x<cols; x++) {
+          var char = screen[y*cols + x];
+          ctx.fillText(char, x * 10 + 9, y * 21.2 + 24);
+        }
+      }
+      curflicker += dt;
+      if (curflicker % 500 < 250) {
+        ctx.fillText("█", (curpos % cols) * 10 + 9, Math.floor(curpos/cols) * 21.2 + 24);
+      }
+      prevt = t;
+      requestAnimationFrame(frame);
+    }
+    // console specific functions
+    function getlineind(curpos) {
+      return Math.floor(curpos / cols) * cols;
+    }
+    function write(text, newline) {
+      for (var i=0; i<text.length; i++) {
+        screen[curpos] = text[i];
+        curpos += 1;
+        if (curpos >= rows*cols) {
+          screen = screen.slice(cols).concat(Array(cols).fill(" "));
+          curpos -= cols;
+        }
+      }
+      if (!newline) {return}
+      curpos = getlineind(curpos) + cols;
+      while (curpos >= rows*cols) {
+          screen = screen.slice(cols).concat(Array(cols).fill(" "));
+          curpos -= cols;
+      }
+    }
+    function runcommand(cmd) {
+      var args = [];
+      var this_arg = "";
+      // parsing arguments
+      for (var i=0; i<cmd.length; i++) {
+        if (", ".includes(cmd[i])) {
+          if (this_arg) {
+            args.push(this_arg);
+          }
+          this_arg = "";
+          continue;
+        }
+        if (cmd[i] == '"') {
+          args.push(this_arg);
+          this_arg = "";
+          var leftover = cmd.slice(i+1);
+          if (leftover.includes('"')) {
+            i += leftover.indexOf('"') + 2;
+            args.push(leftover.slice(0, leftover.indexOf('"')));
+            continue;
+          } else {
+            return "UNTERMINATED STRING LITERAL";
+          }
+        }
+        this_arg += cmd[i];
+      }
+      if (this_arg) {
+        args.push(this_arg);
+      }
+      for (var i=0; i<args.length; i++) {
+        if (args[i][0] == "$") {
+          var this_var = variables[args[i].slice(1)];
+          if (this_var != undefined) {
+            args[i] = this_var;
+          }
+        }
+      }
+      // running the command
+      switch (args[0]) {
+        case "PRINT":
+          return args.slice(1).join(" ");
+        case "ASSIGN":
+          variables[args[1]] = args[2];
+          return;
+        case "DIR":
+          return "NOT IMPLEMENTED";
+        default:
+          return "UNKNOWN COMMAND " + args[0];
+      }
+    }
+    function onkeypress(ev) {
+      sorry.style.display = "none";
+      if (ev.ctrlKey) {return}
+      curflicker = 0;
+      switch (ev.keyCode) {
+        case 8: // backspace
+          if (curpos > 0) {
+            curpos -= 1;
+            screen[curpos] = "";
+          }
+          break;
+        case 13: // enter
+          var line_ind = getlineind(curpos);
+          var line = screen.slice(line_ind, line_ind + cols).join("").trim();
+          write("", true);
+          if (line != "") {
+            var res = runcommand(line, true);
+            if (res) {
+              write(res, true);
+            }
+          }
+          break;
+        case 37: // left
+          if (curpos > 0) {
+            curpos -= 1;
+          }
+          break;
+        case 38: // up
+          if (curpos >= cols) {
+            curpos -= cols;
+          }
+          break;
+        case 39: // right
+          if (curpos < rows*cols-1) {
+            curpos += 1;
+          }
+          break;
+        case 40: // down
+          if (curpos < cols * (rows-1)) {
+            curpos += cols;
+          }
+          break;
+        default:
+          if (ev.key.length == 1) {
+            write(ev.key.toUpperCase(), false);
+          }
+          break;
+      }
+    }
+    function sorrytext(ev) {
+      sorry.style.display = "";
+    }
+    addEventListener("keydown", onkeypress);
+    addEventListener("touchstart", sorrytext);
+    // entering the loop
+    requestAnimationFrame(frame);
+  </script>
+  </body>
+</html>
