@@ -42,41 +42,42 @@
   </head>
   <body>
     <canvas id="bg">Enable javascript to view this page</canvas>
+    <img id="sheet" style="display: none" src="tileset.png"></img>
     <a id="sorry" style="display: none;">Sorry, this page does not support touch screen controls for now. Please use a keyboard</a>
   <script>
     const bg = document.getElementById("bg");
+    const sheet = document.getElementById("sheet");
     const sorry = document.getElementById("sorry");
     const ctx = bg.getContext("2d");
-    bg.width = 768;
-    bg.height = 544;
+    bg.width = 768+4;
+    bg.height = 544+4;
     ctx.font = "18px monospace";
     var prevt = 0;
-    var width = window.innerWidth;
-    var height = window.innerHeight;
-    var rows = 25;
-    var cols = 75;
-    var screen = Array(rows*cols).fill(" ");
-    var temp_text = 'ASSIGN H HELLO' + ' '.repeat(61) + 'PRINT $H, "WORLD"'
-    screen = temp_text.split("").concat(screen.slice(temp_text.length))
+    var rows = 17;
+    var cols = 24;
+    var screen = Array(rows*cols).fill(32);
     var variables = {};
     var curpos = 0;
     var curflicker = 0;
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = "#ffffaa";
+    ctx.fillRect(0, 0, 772, 548);
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(2, 2, 768, 544);
     function frame(t) {
       var dt = t - prevt;
-      ctx.fillStyle = "#ffffaa";
-      ctx.fillRect(0, 0, 768, 544);
-      ctx.fillStyle = "#000000";
-      ctx.fillRect(2, 2, 764, 540);
-      ctx.fillStyle = "#ffffaa";
       for (var y=0; y<rows; y++) {
         for (var x=0; x<cols; x++) {
           var char = screen[y*cols + x];
-          ctx.fillText(char, x * 10 + 9, y * 21.2 + 24);
+          ctx.drawImage(sheet, (char%16)*8, Math.floor(char/16)*8, 8, 8, x*32+2, y*32+2, 32, 32);
         }
       }
       curflicker += dt;
       if (curflicker % 500 < 250) {
-        ctx.fillText("█", (curpos % cols) * 10 + 9, Math.floor(curpos/cols) * 21.2 + 24);
+        var x = curpos % cols;
+        var y = Math.floor(curpos / cols);
+        var char = screen[y*cols + x];
+        ctx.drawImage(sheet, (char%16)*8 + 128, Math.floor(char/16)*8, 8, 8, x*32+2, y*32+2, 32, 32);
       }
       prevt = t;
       requestAnimationFrame(frame);
@@ -86,18 +87,21 @@
       return Math.floor(curpos / cols) * cols;
     }
     function write(text, newline) {
+      if (typeof text === "number") {
+        text = String.fromCharCode(text);
+      }
       for (var i=0; i<text.length; i++) {
-        screen[curpos] = text[i];
+        screen[curpos] = text[i].charCodeAt(0);
         curpos += 1;
         if (curpos >= rows*cols) {
-          screen = screen.slice(cols).concat(Array(cols).fill(" "));
+          screen = screen.slice(cols).concat(Array(cols).fill(32));
           curpos -= cols;
         }
       }
       if (!newline) {return}
       curpos = getlineind(curpos) + cols;
       while (curpos >= rows*cols) {
-          screen = screen.slice(cols).concat(Array(cols).fill(" "));
+          screen = screen.slice(cols).concat(Array(cols).fill(32));
           curpos -= cols;
       }
     }
@@ -159,12 +163,12 @@
         case 8: // backspace
           if (curpos > 0) {
             curpos -= 1;
-            screen[curpos] = "";
+            screen[curpos] = 32;
           }
           break;
         case 13: // enter
           var line_ind = getlineind(curpos);
-          var line = screen.slice(line_ind, line_ind + cols).join("").trim();
+          var line = String.fromCharCode.apply(null, screen.slice(line_ind, line_ind + cols)).trim();
           write("", true);
           if (line != "") {
             var res = runcommand(line, true);
@@ -195,7 +199,12 @@
           break;
         default:
           if (ev.key.length == 1) {
-            write(ev.key.toUpperCase(), false);
+            var this_code = ev.key.toUpperCase().charCodeAt(0);
+            if (this_code >= 256) {
+              this_code = 0;
+            }
+            // console.log(ev.key, this_code)
+            write(this_code, false);
           }
           break;
       }
@@ -205,6 +214,10 @@
     }
     addEventListener("keydown", onkeypress);
     addEventListener("touchstart", sorrytext);
+    // silly temp text
+    var temp_text = "ASSIGN H HELLO" + " ".repeat(10) + "PRINT $H WORLD";
+    write(temp_text, true);
+    curpos = 0;
     // entering the loop
     requestAnimationFrame(frame);
   </script>
