@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta name="darkreader-lock">
+    <title>/console</title>
+    <style>
+      * {
+        scrollbar-width: none;
+      }
+      body {
+        background-color: black;
+        overflow: hidden;
+        font-family: monospace;
+        color: #ffa;
+        text-align: center;
+        font-size: xxx-large;
+      }
+      #bg {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+        max-width: 100%;
+        max-height: 100vh;
+        z-index: -999;
+        aspect-ratio: 4/3;
+        filter: blur(1px);
+      }
+      #sorry {
+          position: absolute;
+          top: 47%;
+          left: 0;
+          right: 0;
+          background: black;
+          border-style: solid;
+          padding: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="bg">Enable javascript to view this page</canvas>
+    <img id="sheet" style="display: none" src="tileset.png"></img>
+    <a id="sorry" style="display: none;">Sorry, this page does not support touch screen controls for now. Please use a keyboard</a>
+  <script>
+    const bg = document.getElementById("bg");
+    const sheet = document.getElementById("sheet");
+    const sorry = document.getElementById("sorry");
+    const ctx = bg.getContext("2d");
+    const rows = 34;
+    const cols = 48;
+    bg.width = 768+4;
+    bg.height = 544+4;
+    ctx.font = "18px monospace";
+    var prevt = 0;
+    var screen = Array(rows*cols).fill(32);
+    var variables = {};
+    var curpos = 0;
+    var curflicker = 0;
+    ctx.imageSmoothingEnabled = false;
+    ctx.fillStyle = "#ffffaa";
+    ctx.fillRect(0, 0, 772, 548);
+    ctx.fillStyle = "#000000";
+    ctx.fillRect(2, 2, 768, 544);
+    // filesystem stuff
+    const chunk = (rows-1) * cols
+    var filetable = {};
+    var program = {};        // ?
+    var programcounter = 0; // ???
+    // screen redraw
+    function frame(t) {
+      var dt = t - prevt;
+      for (var y=0; y<rows; y++) {
+        for (var x=0; x<cols; x++) {
+          var char = screen[y*cols + x];
+          ctx.drawImage(sheet, (char%16)*8, Math.floor(char/16)*8, 8, 8, x*16+2, y*16+2, 16, 16);
+        }
+      }
+      curflicker += dt;
+      if (curflicker % 500 < 250) {
+        var x = curpos % cols;
+        var y = Math.floor(curpos / cols);
+        var char = screen[y*cols + x];
+        ctx.drawImage(sheet, (char%16)*8 + 128, Math.floor(char/16)*8, 8, 8, x*16+2, y*16+2, 16, 16);
+      }
+      prevt = t;
+      requestAnimationFrame(frame);
+    }
+    // console specific functions
+    function getlineind(curpos) {
+      return Math.floor(curpos / cols) * cols;
+    }
+    function write(text, newline) {
+      if (typeof text === "number") {
+        text = String.fromCharCode(text);
+      }
+      var did_newline = false;
+      for (var i=0; i<text.length; i++) {
+        if (text[i] == "\n") {
+          curpos = getlineind(curpos) + cols;
+        } else {
+          screen[curpos] = text[i].charCodeAt(0);
+          curpos += 1;
+        }
+        if (curpos >= rows*cols) {
+          screen = screen.slice(cols).concat(Array(cols).fill(32));
+          curpos -= cols;
+          did_newline = true;
+        }
+      }
+      if (!newline) {return}
+      if (!did_newline) {curpos = getlineind(curpos) + cols}
+      while (curpos >= rows*cols) {
+          screen = screen.slice(cols).concat(Array(cols).fill(32));
+          curpos -= cols;
+      }
+    }
+    function writefile(name, data) {
+      filetable[name] = data + " ".repeat(chunk - data.length);
+    }
+    function runcommand(cmd) {
+      var args = [];
+      var this_arg = "";
+      // parsing arguments
+      for (var i=0; i<cmd.length; i++) {
+        if (", ".includes(cmd[i])) {
+          if (this_arg) {
+            args.push(this_arg);
+          }
+          this_arg = "";
+          continue;
+        }
+        if (cmd[i] == '"') {
+          args.push(this_arg);
+          this_arg = "";
+          var leftover = cmd.slice(i+1);
+          if (leftover.includes('"')) {
+            i += leftover.indexOf('"') + 2;
+            args.push(leftover.slice(0, leftover.indexOf('"')));
+            continue;
+          } else {
+            return "UNTERMINATED STRING LITERAL";
+          }
+        }
+        this_arg += cmd[i];
+      }
+      if (this_arg) {
+        args.push(this_arg);
+      }
+      for (var i=0; i<args.length; i++) {
+        if (args[i][0] == "$") {
+          var this_var = variables[args[i].slice(1)];
+          if (this_var != undefined) {
+            args[i] = this_var;
+          }
+        }
+      }
+      // running the command
+      switch (args[0].toUpperCase()) {
+        case "PRINT":
+          return args.slice(1).join(" ");
+        case "ASSIGN":
+          variables[args[1]] = args[2];
+          return;
+        case "WRITE":
+          return "COMING SOON";
+        case "LIST":
+          // coming soon
+          return;
+        case "NEW":
+          program = {};
+          return;
+        case "RUN":
+          programcounter = 0;
+          return "MAYBE COMING SOON";
+        case "DIR":
+          return Object.keys(filetable).join("\n");
+        case "CAT":
+          if (!Object.keys(filetable).includes(args[1])) {
+            return "FILE NOT FOUND";
+          }
+          return filetable[args[1]].trim();
+        default:
+          return "UNKNOWN COMMAND " + args[0];
+      }
+    }
+    function onkeypress(ev) {
+      sorry.style.display = "none";
+      if (ev.ctrlKey) {return}
+      curflicker = 0;
+      switch (ev.keyCode) {
+        case 8: // backspace
+          if (curpos > 0) {
+            curpos -= 1;
+            screen[curpos] = 32;
+          }
+          break;
+        case 13: // enter
+          var line_ind = getlineind(curpos);
+          var line = String.fromCharCode.apply(null, screen.slice(line_ind, line_ind + cols)).trim();
+          write("", true);
+          if (line != "") {
+            var res = runcommand(line, true);
+            if (res) {
+              write(res, true);
+            }
+          }
+          break;
+        case 37: // left
+          if (curpos > 0) {
+            curpos -= 1;
+          }
+          break;
+        case 38: // up
+          if (curpos >= cols) {
+            curpos -= cols;
+          }
+          break;
+        case 39: // right
+          if (curpos < rows*cols-1) {
+            curpos += 1;
+          }
+          break;
+        case 40: // down
+          if (curpos < cols * (rows-1)) {
+            curpos += cols;
+          }
+          break;
+        default:
+          if (ev.key.length == 1) {
+            var this_code = ev.key.toUpperCase().charCodeAt(0);
+            if (this_code >= 256) {
+              this_code = 0;
+            }
+            //console.log(ev.key, this_code);
+            write(this_code, false);
+          }
+          break;
+      }
+    }
+    function sorrytext(ev) {
+      sorry.style.display = "";
+    }
+    addEventListener("keydown", onkeypress);
+    addEventListener("touchstart", sorrytext);
+    // silly temp
+    var temp_text = "ASSIGN H HELLO\nPRINT $H WORLD";
+    write(temp_text, true);
+    curpos = 0;
+    writefile("HI", "HELLO, WORLD!!");
+    // entering the loop
+    requestAnimationFrame(frame);
+  </script>
+  </body>
+</html>
