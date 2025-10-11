@@ -96,9 +96,9 @@
         }
         var all_inds = Object.keys(program);
         var is_end = true;
-        for (var i=0; i<all_inds.length; i++) {
-          if (all_inds[i] > programcounter) {
-            programcounter = all_inds[i];
+        for (var i of all_inds) {
+          if (i > programcounter) {
+            programcounter = i;
             is_end = false;
             break;
           }
@@ -120,11 +120,11 @@
         text = String.fromCharCode(text);
       }
       var did_newline = false;
-      for (var i=0; i<text.length; i++) {
-        if (text[i] == "\n") {
+      for (var i of text) {
+        if (i == "\n") {
           curpos = getlineind(curpos) + cols;
         } else {
-          screen[curpos] = text[i].charCodeAt(0);
+          screen[curpos] = i.charCodeAt(0);
           curpos += 1;
         }
         if (curpos >= rows*cols) {
