@@ -95,56 +95,94 @@
         text-align: center;
         font-size: x-large;
       }
+      span[lang="en"] {
+        display: unset;
+      }
+      span[lang="ru"] {
+        display: none;
+      }
     </style>
   </head>
   <body>
     <canvas id="bg"></canvas>
     <div id="container">
       <div id="inner">
-        <h1>Silly website</h1>
-        <p>Something will be here soon, but not now.</p>
+        <h1>
+          <span lang="en">Silly website</span>
+          <span lang="ru">Просто сайт</span>
+        </h1>
+        <p>
+          <span lang="en">Something will be here soon, but not now.</span>
+          <span lang="ru">Скоро здесь будет что-то, но не сейчас.</span>
+        </p>
       </div>
     </div>
     <div id="you_found_me">
-      <a>congrats, you scrolled down. there's nothing here. are you happy?</a>
+      <a>
+        <span lang="en">congrats, you scrolled down. there's nothing here. are you happy?</span>
+        <span lang="ru">поздравляю, ты прокрутил вниз. тут ничего нет. ты доволен?</span>
+      </a>
     </div>
     <div id="panel">
       <div id="panel_inner">
-        <a href="console">placeholder link</a>
-        <span id="splash"></span>
+        <a href="console">
+          <span lang="en">placeholder link</span>
+          <span lang="ru">пустая ссылка</span>
+        </a>
+        <span id="splash">why do you have javascript disabled</span>
         <span id="cursor" style="display: none;">█</span>
-        <a href="https://github.com/totallynotmeme">my github account</a>
+        <a href="https://github.com/totallynotmeme">
+          <span lang="en">my github account</span>
+          <span lang="ru">мой акк на github</span>
+        </a>
       </div>
     </div>
   <script>
     const bg = document.getElementById("bg");
     const splash = document.getElementById("splash");
     const cursor = document.getElementById("cursor");
-    const texts = [
-        // "wow you found a secret splash text",
-        "check out my other projects i guess",
-        "what are you doing on my website?",
-        "something will be here... someday.",
-        "totally nothing here",
-        "this text is random, refresh the page",
-        "programming random stuff",
-        "Achievement get! How did we get here?",
-        "i like blue... and berries.",
-        "insert funny text here",
-        "written fully in notepad++",
+    const userlang = new Intl.Locale(navigator.language).language;
+    var visiblelang = document.querySelectorAll("[lang='en']");
+    var splashes = [
+        //{"en": "wow you found a secret splash text", "ru": "вау ты нашёл секретный сплеш"},
+        {"en": "check out my other projects i guess", "ru": "у меня есть и другие проекты"},
+        {"en": "what are you doing on my website?", "ru": "что ты забыл на моём сайте?"},
+        {"en": "something will be here... someday.", "ru": "что-то здесь будет... когда нибудь."},
+        {"en": "totally nothing here", "ru": "здесь точно ничего нет"},
+        {"en": "this text is random, refresh the page", "ru": "этот текст меняется, обнови страницу"},
+        {"en": "programming random stuff", "ru": "программирую рандомные вещи"},
+        {"en": "Achievement get! How did we get here?", "ru": "Достижение получено! Невозможное Возможно"},
+        {"en": "i like blue... and berries.", "ru": "мне нравится синий... и ягоды."},
+        {"en": "insert funny text here", "ru": "вставьте смешной текст"},
+        {"en": "written fully in notepad++", "ru": "написано полностью в блокноте++"},
     ]
-    const chosen_text = texts[Math.floor(Math.random() * texts.length)];
+    var chosen_text = splashes[Math.floor(Math.random() * splashes.length)];
+    delete splashes;
     var cursor_shown = false;
     var e_blur = 0;
     var e_bright = 0;
+    var prev_scroll = -1;
     var width = window.innerWidth;
     var height = window.innerHeight;
     bg.width = width;
     bg.height = height;
-    splash.textContent = chosen_text;
+    splash.textContent = chosen_text[userlang] || chosen_text["en"];
     cursor.style = "margin-left: " + (chosen_text.length + 1) + "ch; padding: 0;";
     document.documentElement.scrollTop = 0;
     const ctx = bg.getContext("2d");
+    function updatelang(lang) {
+      const selector = document.querySelectorAll("[lang='" + lang + "']");
+      if (selector.length) {
+        for (var i of visiblelang) {
+          i.style.display = "none";
+        }
+        for (var i of selector) {
+          i.style.display = "unset";
+        }
+        visiblelang = selector;
+        splash.textContent = chosen_text[lang] || chosen_text["en"];
+      }
+    }
     function frame(t) {
       // syncing up stuff
       if (width !== window.innerWidth) {
@@ -169,9 +207,12 @@
           cursor.style.display = "none";
         }
       }
-      e_blur = document.documentElement.scrollTop / height * 50 + 10;
-      e_bright = Math.max(1 - document.documentElement.scrollTop / height, 0);
-      bg.style.filter = "blur(" + e_blur + "px) brightness(" + e_bright + ")";
+      if (prev_scroll != document.documentElement.scrollTop) {
+        prev_scroll = document.documentElement.scrollTop;
+        e_blur = prev_scroll / height * 50 + 10;
+        e_bright = Math.max(1 - prev_scroll / height, 0);
+        bg.style.filter = "blur(" + e_blur + "px) brightness(" + e_bright + ")";
+      }
       if (e_bright > 0) {
         for (var x=0; x<width/128; x++) {
           for (var y=0; y<height/128; y++) {
@@ -183,6 +224,7 @@
       }
       requestAnimationFrame(frame);
     }
+    updatelang(userlang);
     // entering the loop
     requestAnimationFrame(frame);
   </script>
