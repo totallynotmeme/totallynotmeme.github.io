@@ -15,6 +15,8 @@
         color: #ffa;
         text-align: center;
         font-size: xxx-large;
+        touch-action: manipulation;
+        user-select: none;
       }
       #bg {
         position: fixed;
@@ -29,25 +31,28 @@
         aspect-ratio: 4/3;
         filter: blur(0px);
       }
-      #sorry {
-          position: absolute;
-          top: 47%;
-          left: 0;
-          right: 0;
-          background: black;
-          border-style: solid;
-          padding: 10px;
+      #keyboard {
+        position: fixed;
+        bottom: 10px;
+        left: 0;
+        right: 0;
+        margin: auto;
+        width: 90%;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        border-style: solid;
+        background-color: black;
       }
     </style>
   </head>
   <body>
     <canvas id="bg">Enable javascript to view this page</canvas>
     <img id="sheet" style="display: none" src="tileset.png"></img>
-    <a id="sorry" style="display: none;">Sorry, this page does not support touch screen controls for now. Please use a keyboard</a>
+    <div id="keyboard" style="display: none"></div>
   <script>
     const bg = document.getElementById("bg");
     const sheet = document.getElementById("sheet");
-    const sorry = document.getElementById("sorry");
+    const keyboard = document.getElementById("keyboard");
     const ctx = bg.getContext("2d");
     const rows = 34;
     const cols = 48;
@@ -59,6 +64,7 @@
     var curpos = 0;
     var curflicker = 0;
     var redraw = true;
+    var need_kbinit = true;
     ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = "#ffffaa";
     ctx.fillRect(0, 0, 772, 548);
@@ -227,7 +233,10 @@
       }
     }
     function onkeypress(ev) {
-      sorry.style.display = "none";
+      if (!ev.fake) {
+        keyboard.style.display = "none";
+        bg.style.marginTop = "";
+      }
       if (ev.ctrlKey) {return}
       curflicker = 0;
       redraw = true;
@@ -307,11 +316,51 @@
           break;
       }
     }
-    function sorrytext(ev) {
-      sorry.style.display = "";
+    function onmobiletap(ev) {
+      if (ev.target == bg) {
+        var touch = ev.touches[0];
+        var touch_x = Math.floor((touch.pageX - bg.getBoundingClientRect().x) / 16);
+        var touch_y = Math.floor((touch.pageY - bg.getBoundingClientRect().y) / 16);
+        curpos = touch_x + touch_y * cols;
+        curflicker = 0;
+        redraw = true;
+      }
+      var text = ev.target.textContent;
+      if (text && text.length < 6) {
+        switch(text) {
+          case "HLT":
+            onkeypress({keyCode: 9, preventDefault: () => {}, fake: true});
+            break;
+          case "BACK":
+            onkeypress({keyCode: 8, preventDefault: () => {}, fake: true});
+            break;
+          case "RET":
+            onkeypress({keyCode: 13, preventDefault: () => {}, fake: true});
+            break;
+          case "SPACE":
+            text = " ";
+          default:
+            onkeypress({key: text, keyCode: text.charCodeAt(0), preventDefault: () => {}, fake: true});
+            break;
+        }
+      }
+      keyboard.style.display = "";
+      bg.style.marginTop = "5px";
+      if (need_kbinit) {
+        need_kbinit = false;
+        for (var i of "T          B1234567890-=qwertyuiop[]asdfghjkl;'Rzxcvbnm,./ S") {
+          var b = document.createElement("a");
+          if (i == "T") {i = "HLT";}
+          if (i == "B") {i = "BACK";}
+          if (i == "R") {i = "RET";}
+          if (i == "S") {i = "SPACE";}
+          b.textContent = i;
+          keyboard.appendChild(b);
+        }
+      }
     }
     addEventListener("keydown", onkeypress);
-    addEventListener("touchstart", sorrytext);
+    addEventListener("touchstart", onmobiletap);
     // silly temp
     var temp_text = '\n10 ASSIGN H "HELLO,"\n20 ASSIGN W "WORLD!"\n30 PRINT $H $W\nRUN';
     write(temp_text, true);
