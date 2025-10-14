@@ -124,7 +124,7 @@
         var all_inds = Object.keys(program);
         var is_end = true;
         for (var i of all_inds) {
-          if (i > programcounter) {
+          if (i > +programcounter) {
             programcounter = i;
             is_end = false;
             break;
