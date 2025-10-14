@@ -94,6 +94,8 @@
     var program = {};
     var programcounter = -1;
     var running = false;
+    var returnstack = [];
+    // mobile stuff
     var tap_holding = undefined;
     var prev_touch_x = -1;
     var prev_touch_y = -1;
@@ -217,9 +219,28 @@
         case "ASSIGN":
           variables[args[1]] = args[2];
           return;
+        case "GOSUB":
+          if (returnstack.length > 64) {
+            running = false;
+            return "?STACK OVERFLOW";
+          }
+          // literally goto but copy-pasted and with one extra line
+          if (args[1] && /^\d+$/.test(args[1])) {
+            returnstack.push(programcounter);
+            programcounter = args[1]-1;
+          }
+          return;
+        case "RETURN":
+          // literally goto but copy-pasted and with one extra line
+          if (!returnstack.length) {
+            running = false;
+            return "?RETURN WITHOUT GOSUB";
+          }
+          programcounter = returnstack.pop();
+          return;
         case "WRITE":
           running = false;
-          return "COMING SOON";
+          return "?COMING SOON";
         case "LIST":
           var line_nums = Object.keys(program);
           var line_content = Object.values(program);
@@ -230,9 +251,10 @@
         case "RUN":
           if (running) {
             running = false;
-            return "CANT RUN INSIDE PROGRAM";
+            return "?CANT RUN INSIDE PROGRAM";
           }
           programcounter = Object.keys(program)[0];
+          returnstack = [];
           running = true;
           return;
         case "DIR":
@@ -240,7 +262,7 @@
         case "CAT":
           if (!Object.keys(filetable).includes(args[1])) {
             running = false;
-            return "FILE NOT FOUND";
+            return "?FILE NOT FOUND";
           }
           return filetable[args[1]].trim();
         case "GOTO":
@@ -250,7 +272,7 @@
           return;
         default:
           running = false;
-          return "UNKNOWN COMMAND " + args[0];
+          return "?UNKNOWN COMMAND " + args[0];
       }
     }
     function onkeypress(ev) {
