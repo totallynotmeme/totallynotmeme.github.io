@@ -52,6 +52,7 @@
         height: 50px;
         color: #f55;
         border-style: solid;
+        background-color: black;
       }
       .keyboardkey {
         align-content: center;
@@ -337,17 +338,21 @@
           break;
       }
     }
+    function setcursorontap(ev) {
+      var x = ev.clientX;
+      var y = ev.clientY;
+      var rect = bg.getBoundingClientRect();
+      x = (x - rect.x) / rect.width * cols;
+      x = Math.floor(Math.min(Math.max(x, 0), cols-1));
+      y = (y - rect.y) / rect.height * rows;
+      y = Math.floor(Math.min(Math.max(y, 0), rows-1));
+      curpos = x + y * cols;
+      curflicker = 0;
+      redraw = true;
+    }
     function onmobiletap(ev) {
       if (ev.target == bg) {
-        var touch = ev.touches[0];
-        var rect = bg.getBoundingClientRect();
-        var touch_x = (touch.pageX - rect.x) / rect.width * cols;
-        touch_x = Math.floor(Math.min(Math.max(touch_x, 0), cols-1));
-        var touch_y = (touch.pageY - rect.y) / rect.height * rows;
-        touch_y = Math.floor(Math.min(Math.max(touch_y, 0), rows-1));
-        curpos = touch_x + touch_y * cols;
-        curflicker = 0;
-        redraw = true;
+        setcursorontap(ev.touches[0]);
       }
       tap_holding = ev.target;
       if (tap_holding && tap_holding.className == "keyboardkey" && tap_holding.textContent != " ") {
@@ -358,11 +363,9 @@
       keyboard.style.display = "";
       if (window.innerWidth > window.innerHeight) {
         // horizontal
-        bg.style.marginTop = "";
         bg.style.width = "";
       } else {
         // vertical
-        bg.style.marginTop = "50%";
         bg.style.width = "100%";
       }
       if (need_kbinit) {
@@ -402,7 +405,7 @@
           case "SPACE":
             text = " ";
           default:
-            onkeypress({key: text, keyCode: text.charCodeAt(0), preventDefault: () => {}, fake: true});
+            onkeypress({key: text, keyCode: 0, preventDefault: () => {}, fake: true});
             break;
         }
       }
@@ -410,6 +413,7 @@
     addEventListener("keydown", onkeypress);
     addEventListener("touchstart", onmobiletap);
     addEventListener("touchend", onmobilerelease);
+    bg.onclick = setcursorontap;
     // silly temp
     var temp_text = '\n10 ASSIGN H "HELLO,"\n20 ASSIGN W "WORLD!"\n30 PRINT $H $W\nRUN';
     write(temp_text, true);
