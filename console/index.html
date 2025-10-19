@@ -148,7 +148,6 @@
       if (typeof text === "number") {
         text = String.fromCharCode(text);
       }
-      var did_newline = false;
       for (var i of text) {
         if (i == "\n") {
           curpos = getlineind(curpos) + cols;
@@ -159,11 +158,10 @@
         if (curpos >= rows*cols) {
           screen = screen.slice(cols).concat(Array(cols).fill(32));
           curpos -= cols;
-          did_newline = true;
         }
       }
       if (!newline) {return}
-      if (!did_newline) {curpos = getlineind(curpos) + cols}
+      curpos = getlineind(curpos) + cols;
       while (curpos >= rows*cols) {
           screen = screen.slice(cols).concat(Array(cols).fill(32));
           curpos -= cols;
@@ -231,7 +229,6 @@
           }
           return;
         case "RETURN":
-          // literally goto but copy-pasted and with one extra line
           if (!returnstack.length) {
             running = false;
             return "?RETURN WITHOUT GOSUB";
@@ -265,11 +262,26 @@
             return "?FILE NOT FOUND";
           }
           return filetable[args[1]].trim();
+        case "SAVE":
+          if (!args[1]) {return}
+          var line_nums = Object.keys(program);
+          var line_content = Object.values(program);
+          var content = line_nums.map((num, ind) => num + " " + line_content[ind]).join("\n") + "\n";
+          filetable[args[1]] = content;
+          return;
+        case "LOAD":
+          return "?MAYBE COMING SOON";
+        case "DEL":
+          delete filetable[args[1]];
+          return;
         case "GOTO":
           if (args[1] && /^\d+$/.test(args[1])) {
             programcounter = args[1]-1; // chess battle advanced
           }
           return;
+        case "END":
+          running = false;
+          return "FINISHED";
         default:
           running = false;
           return "?UNKNOWN COMMAND " + args[0];
