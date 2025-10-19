@@ -115,7 +115,7 @@
       var x = curpos % cols;
       var y = Math.floor(curpos / cols);
       var symbol = screen[y*cols + x];
-      var offset = (curflicker % 500 < 250) * 128
+      var offset = (!running && curflicker % 500 < 250) * 128;
       ctx.drawImage(sheet, (symbol%16)*8+offset, Math.floor(symbol/16)*8, 8, 8, x*16+2, y*16+2, 16, 16);
       prevt = t;
       if (running) {
