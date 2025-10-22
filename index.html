@@ -5,7 +5,7 @@
     <meta name="darkreader-lock">
     <meta property="og:url" content="https://totallynotmeme.github.io/">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="hi">
+    <meta property="og:title" content="hi lol">
     <meta property="og:description" content="who sent you this link?">
     <!-- <meta property="og:image" content="https://example.com/example-image.jpg"> will add this later mb-->
     <meta name="theme-color" content="#66ddff">
@@ -20,7 +20,10 @@
         overflow-x: hidden;
         font-family: monospace;
       }
-      #container {
+      .sep {
+        margin-top: 100vh !important;
+      }
+      #title_container {
         width: 700px;
         height: 300px;
         position: absolute;
@@ -32,11 +35,23 @@
         display: flex;
         align-items: center;
       }
-      #inner {
+      #title_inner {
         text-align: center;
         font-size: xx-large;
         text-shadow: #09f 0 0 20px;
         margin: auto;
+      }
+      #aboutme_container {
+        width: 80%;
+        margin: auto;
+        font-size: xx-large;
+      }
+      #aboutme_container u {
+        color: #0f9;
+        cursor: pointer;
+      }
+      #aboutme_container a {
+        color: #0f9;
       }
       #panel {
         position: fixed;
@@ -85,11 +100,7 @@
       #cursor {
         position: absolute;
       }
-      #you_found_me {
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: 200vh;
+      #why_are_you_reading_the_source_code {
         margin: auto;
         padding-bottom: 50px;
         text-align: center;
@@ -105,19 +116,25 @@
   </head>
   <body>
     <canvas id="bg"></canvas>
-    <div id="container">
-      <div id="inner">
+    <div id="title_container">
+      <div id="title_inner">
         <h1>
-          <span lang="en">Silly website</span>
-          <span lang="ru">Просто сайт</span>
+          <span lang="en">just my website</span>
+          <span lang="ru">просто мой сайт</span>
         </h1>
         <p>
-          <span lang="en">Something will be here soon, but not now.</span>
-          <span lang="ru">Скоро здесь будет что-то, но не сейчас.</span>
+          <span lang="en">hi, scroll down if you want</span>
+          <span lang="ru">привет, прокрути вниз если хочешь</span>
         </p>
       </div>
     </div>
-    <div id="you_found_me">
+    <div class="sep" id="aboutme_container">
+      <p>
+        <span lang="en">there was supposed to be a list of my project here, but i decided that a single &lt;p&gt; block is better than random demos. i'm just another person from the internet who speaks english and russian languages (click <u onclick="updatelang('ru')">here</u> to see russian translation). i've been writing simple programs for a while, but then one event (ahem online safety act) made me revive one of my old projects and <a href="https://github.com/totallynotmeme/AnChat">publish it</a> into the wild. who knows, maybe we can get it to a usable state at one point.<br><br>why am i making this page even though absolutely no one will see it? because programming is genuinely my passion and i absolutely love making stuff like this page you're seeing right now. i don't use ai to write code, and i believe in privacy as a human right despite whatever happened to the internet in the last few months. we are the hive mind, nothing can stop us. anyway, my rant is over. if you've read all of this nonsense i wrote, huge props to you. i'm still working on my stuff, so stay tuned for updates if you're somehow interested in what i create.</span>
+        <span lang="ru">здесь должен был быть список моих проектов, но я решил, что обычный блок &lt;p&gt; в разы лучше всяких демонстраций. я просто очередной человек из интернета который разговаривает на русском и английском языках (нажми <u onclick="updatelang('en')">сюда</u> чтобы увидеть английский перевод). я уже довольно давно писал различные простенькие программы, но затем одно событие (кхм акт о безопасности в интернете в великобритании) заставил меня оживить один из моих старых проектов и <a href="https://github.com/totallynotmeme/AnChat">выложить его</a> в открытый мир. кто знает, может мы сможем добить его до нормального состояния.<br><br>зачем я сделал этот сайт если прекрасно знаю что никто его не увидит? потому что мне действительно нравится программирование, и я никогда не устану создавать различные проекты такие как эта страница. я не использую ии чтобы писать код и верю в приватность как право человека несмотря на то, что происходило с интернетом в последние несколько месяцев (в нашем случае - лет). мы есть роевой интеллект, нас ничто не остановит. ладно, я высказал всё что хотел. если ты прочитал всю эту бессмыслицу до конца, огромное душевное спасибо. я всё ещё работаю над своими проектами, так что можешь послеживать за обновлениями если тебе по какой-то причине интересно, что я делаю.</span>
+      </p>
+    </div>
+    <div class="sep" id="why_are_you_reading_the_source_code">
       <a>
         <span lang="en">congrats, you scrolled down. there's nothing here. are you happy?</span>
         <span lang="ru">поздравляю, ты прокрутил вниз. тут ничего нет. ты доволен?</span>
@@ -190,6 +207,8 @@
         bg.width = width;
       }
       if (height !== window.innerHeight) {
+        // fix scroll position when window is resized
+        document.documentElement.scrollTop = prev_scroll / height * window.innerHeight;
         height = window.innerHeight;
         bg.height = height;
       }
