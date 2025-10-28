@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta name="darkreader-lock">
+    <meta property="og:url" content="https://totallynotmeme.github.io/colorgame">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="A Color Game">
+    <meta property="og:description" content="A Simple solid-color game... wait who sent you this link?">
+    <!-- <meta property="og:image" content="https://example.com/example-image.jpg"> will add this later mb-->
+    <meta name="theme-color" content="#66ddff">
+    <title>a color game</title>
+    <style>
+      * {
+        scrollbar-width: none;
+        overflow: hidden;
+      }
+      body {
+        background-color: black;
+      }
+      #wrapper {
+        width: 100vw;
+        height: 100vh;
+        top: 0;
+        left: 0;
+        position: absolute;
+        display: grid;
+        align-items: center;
+      }
+      #scorecounter {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        color: white;
+        font-family: monospace;
+        font-size: 35px;
+      }
+      .container {
+        width: 100vw;
+        text-align: center;
+        align-items: center;
+      }
+      .rainbow {
+        background-image: linear-gradient(90deg, #f55, #5f5 50%, #55f 100%);
+        background-clip: text;
+        color: transparent;
+      }
+      .smolgray {
+        color: #999;
+        font-size: 30px;
+      }
+      p {
+        color: white;
+        font-family: monospace;
+        font-size: 50px;
+        backdrop-filter: brightness(0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrapper">
+      <p class="container" id="guide">
+        <span class="rainbow">The Color Game</span><br>
+        When it's <span style="color: #0b0">Green</span> - Tap<br>
+        When it's <span style="color: #00b">Blue</span> - Hold<br>
+        When it's... <span style="color: #b00">Red</span> - Leave it<br>
+        <span class="smolgray">Press any key to begin<br>
+        <span class="smolgray">also please note that this might be janky because i kinda rushed it</p>
+      <p class="container" id="pause" style="display: none">
+        Paused...<br>
+        <span class="smolgray">Press any key to continue</p>
+    </div>
+    <span id="scorecounter">By the way please enable JS to actually play this</span>
+  <script>
+    const guide = document.getElementById("guide");
+    const pause = document.getElementById("pause");
+    const scorecntr = document.getElementById("scorecounter");
+    scorecntr.textContent = "";
+    const body = document.getRootNode().body;
+    const color = {
+      "tap": "#0*0",
+      "hold": "#0/*",
+      "dont": "#*00",
+      "old": "",
+    }
+    const choices = ["tap", "hold", "dont"];
+    var state = "idle";
+    var time = 1;
+    var prev_t = 0;
+    var overlay = guide;
+    var score = 0;
+    var holding = false;
+    var update_score = true;
+    function set_color(col) {
+      if (color.old == col) {return}
+      body.style.backgroundColor = col;
+      color.old = col;
+    }
+    function lose() {
+      state = "loss";
+      time = 0.1;
+      set_color("#fff");
+    }
+    function tap() {
+      holding = true;
+      switch(state) {
+        case "tap":
+        case "-tap":
+        case "hold":
+        case "-hold":
+          set_color(color[state.replace("-","")].replace("*", "d").replace("/", "7"));
+          state += "+";
+          break;
+        case "dont":
+        case "-dont":
+          lose();
+          break;
+      }
+    }
+    function release() {
+      holding = false;
+      switch(state) {
+        case "hold+":
+        case "-hold+":
+          lose();
+          break;
+      }
+    }
+    function process_tap(ev) {
+      if (ev.repeat) {return}
+      if (overlay) {
+        overlay.style.display = "none";
+        overlay = null;
+      } else {
+        tap();
+      }
+    }
+    function frame(t) {
+      var dt = t - prev_t;
+      prev_t = t;
+      if (!overlay) {
+        time -= dt / 1000;
+        if (time < 0) {
+          switch(state) {
+            case "idle":
+              if (holding) {break}
+              if (update_score) {
+                scorecntr.textContent = "0";
+                update_score = false;
+              }
+              time = 20 / (score + 20);
+              state = choices[Math.floor(Math.random()*3)];
+              set_color(color[state].replace("*", "b").replace("/", "4"));
+              scorecntr.style.display = "none";
+              break;
+            case "tap":
+            case "hold":
+            case "dont":
+              set_color(color[state].replace("*", "9").replace("/", "2"));
+            case "tap+":
+            case "hold+":
+            case "dont+":
+              state = "-" + state;
+              time = 20 / (score + 20);
+              break;
+            case "-tap":
+            case "-hold":
+            case "dont":
+              lose();
+              break;
+            case "-tap+":
+            case "-hold+":
+            case "-dont":
+              set_color("#000");
+              state = "idle";
+              time = 0.2;
+              score += 1;
+              scorecntr.textContent = score;
+              scorecntr.style.display = "";
+              break;
+            case "loss":
+              set_color("#000");
+              state = "idle";
+              time = 1;
+              score = 0;
+              update_score = true;
+              scorecntr.style.display = "";
+              break;
+          }
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    function focusout(ev) {
+      if (!overlay) {
+        overlay = pause;
+        pause.style.display = "";
+      }
+    }
+    addEventListener("keydown", process_tap);
+    addEventListener("touchstart", process_tap);
+    addEventListener("keyup", release);
+    addEventListener("touchend", release);
+    window.onblur = focusout;
+    requestAnimationFrame(frame);
+  </script>
+  </body>
+</html>
