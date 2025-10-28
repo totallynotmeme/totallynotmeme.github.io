@@ -29,11 +29,30 @@
       }
       #scorecounter {
         position: absolute;
-        top: 10px;
-        left: 10px;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
         color: white;
         font-family: monospace;
-        font-size: 35px;
+        font-size: 100px;
+        width: fit-content;
+        height: fit-content;
+      }
+      #bestcounter {
+        position: absolute;
+        top: 120px;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+        color: white;
+        font-family: monospace;
+        font-size: 30px;
+        width: fit-content;
+        height: fit-content;
+        color: #ff0;
       }
       .container {
         width: 100vw;
@@ -58,23 +77,21 @@
     </style>
   </head>
   <body>
+    <span id="scorecounter">By the way please enable JS to actually play this</span>
+    <span id="bestcounter"></span>
     <div id="wrapper">
       <p class="container" id="guide">
         <span class="rainbow">The Color Game</span><br>
-        When it's <span style="color: #0b0">Green</span> - Tap<br>
-        When it's <span style="color: #00b">Blue</span> - Hold<br>
-        When it's... <span style="color: #b00">Red</span> - Leave it<br>
-        <span class="smolgray">Press any key to begin<br>
-        <span class="smolgray">also please note that this might be janky because i kinda rushed it</p>
-      <p class="container" id="pause" style="display: none">
-        Paused...<br>
-        <span class="smolgray">Press any key to continue</p>
+        When it's <span style="color: #0e0">Green</span> - Tap<br>
+        When it's <span style="color: #07e">Blue</span> - Hold<br>
+        When it's... <span style="color: #e00">Red</span> - Leave it<br>
+        <span class="smolgray">Press SPACE/ENTER or TAP to begin<br>
+        <span id="pausetext" style="display: none;">Paused...</span><br>
     </div>
-    <span id="scorecounter">By the way please enable JS to actually play this</span>
   <script>
     const guide = document.getElementById("guide");
-    const pause = document.getElementById("pause");
     const scorecntr = document.getElementById("scorecounter");
+    const pausetext = document.getElementById("pausetext");
     scorecntr.textContent = "";
     const body = document.getRootNode().body;
     const color = {
@@ -89,6 +106,7 @@
     var prev_t = 0;
     var overlay = guide;
     var score = 0;
+    var best_score = 0;
     var holding = false;
     var update_score = true;
     function set_color(col) {
@@ -128,9 +146,11 @@
     }
     function process_tap(ev) {
       if (ev.repeat) {return}
+      if (ev.key && !(ev.key == " " || ev.key == "Enter")) {console.log(ev, ev.key); return}
       if (overlay) {
         overlay.style.display = "none";
         overlay = null;
+        pausetext.style.display = "";
       } else {
         tap();
       }
@@ -146,6 +166,7 @@
               if (holding) {break}
               if (update_score) {
                 scorecntr.textContent = "0";
+                bestcounter.style.display = "none";
                 update_score = false;
               }
               time = 20 / (score + 20);
@@ -182,9 +203,15 @@
               set_color("#000");
               state = "idle";
               time = 1;
+              if (score > best_score) {
+                best_score = score;
+                // do something else maybe??
+              }
               score = 0;
               update_score = true;
               scorecntr.style.display = "";
+              bestcounter.style.display = "";
+              bestcounter.textContent = "Best: " + best_score;
               break;
           }
         }
@@ -193,8 +220,8 @@
     }
     function focusout(ev) {
       if (!overlay) {
-        overlay = pause;
-        pause.style.display = "";
+        overlay = guide;
+        guide.style.display = "";
       }
     }
     addEventListener("keydown", process_tap);
