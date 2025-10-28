@@ -122,8 +122,6 @@
     function tap() {
       holding = true;
       switch(state) {
-        case "tap":
-        case "-tap":
         case "hold":
         case "-hold":
           set_color(color[state.replace("-","")].replace("*", "d").replace("/", "7"));
@@ -138,6 +136,11 @@
     function release() {
       holding = false;
       switch(state) {
+        case "tap":
+        case "-tap":
+          set_color(color[state.replace("-","")].replace("*", "d").replace("/", "7"));
+          state += "+";
+          break;
         case "hold+":
         case "-hold+":
           lose();
