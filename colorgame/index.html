@@ -87,13 +87,13 @@
         When it's <span style="color: #0e0">Green</span> - Tap<br>
         When it's <span style="color: #07e">Blue</span> - Hold<br>
         When it's... <span style="color: #e00">Red</span> - Leave it<br>
-        <span class="smolgray">Press SPACE/ENTER or TAP to begin<br>
-        <span id="pausetext" style="display: none;">Paused...</span><br>
+        <span class="smolgray">Press SPACE/ENTER, CLICK or TAP to begin<br>
+        <span id="subtext">Potential epilepsy warning: bright colors</span><br>
     </div>
   <script>
     const guide = document.getElementById("guide");
     const scorecntr = document.getElementById("scorecounter");
-    const pausetext = document.getElementById("pausetext");
+    const subtext = document.getElementById("subtext");
     scorecntr.textContent = "";
     const body = document.getRootNode().body;
     const color = {
@@ -151,13 +151,19 @@
     }
     function process_tap(ev) {
       if (ev.repeat) {return}
-      if (ev.key && !(ev.key == " " || ev.key == "Enter")) {console.log(ev, ev.key); return}
+      if (ev.key && !(ev.key == " " || ev.key == "Enter")) {return}
       if (overlay) {
         overlay.style.display = "none";
         overlay = null;
-        pausetext.style.display = "";
+        subtext.textContent = "Paused...";
       } else {
         tap();
+      }
+    }
+    function process_untap(ev) {
+      if (ev.key && !(ev.key == " " || ev.key == "Enter")) {return}
+      if (!overlay) {
+        release();
       }
     }
     function frame(t) {
@@ -231,8 +237,10 @@
     }
     addEventListener("keydown", process_tap);
     addEventListener("touchstart", process_tap);
-    addEventListener("keyup", release);
-    addEventListener("touchend", release);
+    addEventListener("mousedown", process_tap);
+    addEventListener("keyup", process_untap);
+    addEventListener("touchend", process_untap);
+    addEventListener("mouseup", process_untap);
     window.onblur = focusout;
     requestAnimationFrame(frame);
   </script>
