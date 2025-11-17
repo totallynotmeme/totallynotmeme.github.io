@@ -12,9 +12,9 @@
         background-color: black;
         font-family: monospace;
       }
-      h1 {
-        color: white;
-        font-size: 50px;
+      input {
+        text-align: center;
+        font-family: monospace;
       }
       #container {
         position: absolute;
@@ -26,16 +26,32 @@
         display: grid;
         align-items: center;
         text-align: center;
+        color: white;
+      }
+      #status {
+        color: #ff7;
       }
     </style>
   </head>
   <body>
     <div id="container">
-      <h1>Under construction</h1>
+      <div>
+        <h1>Please enter the password to proceed</h1>
+        <input id="pw" placeholder="Password123">
+        <h3 id="status">Awaiting input</h3>
+      </div>
     </div>
-  </body>
   <script>
-    // to do: make it work asap
+    const field = document.getElementById("pw");
+    const status = document.getElementById("status");
+    field.onkeypress = function fieldevent(e) {
+      if (!e) {e = window.event}
+      var code = e.code || e.key;
+      if (code == "Enter") {
+        // simulate error.
+        status.textContent = "Err: Not implemented.";
+      }
+    }
   </script>
   </body>
 </html>
