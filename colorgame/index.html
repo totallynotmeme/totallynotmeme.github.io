@@ -111,6 +111,18 @@
     var best_score = 0;
     var holding = false;
     var update_score = true;
+    function getcookie(name) {
+      var items = document.cookie.split(";");
+      for (var i of items) {
+        i = i.split("=");
+        if (name == i[0].trim()) {
+          return i[1].trim();
+        }
+      }
+      return;
+    }
+    best_score = parseInt(getcookie("colorgamebest"));
+    if (isNaN(best_score)) {best_score = 0;}
     function set_color(col) {
       if (color.old == col) {return}
       body.style.backgroundColor = col;
@@ -216,7 +228,9 @@
               time = 1;
               if (score > best_score) {
                 best_score = score;
-                // do something else maybe??
+                // save best score to cookies
+                document.cookie = "colorgamebest=" + score + "; expires=" +
+                                  (new Date("3000")).toUTCString() + "; path=/";
               }
               score = 0;
               update_score = true;
