@@ -99,6 +99,24 @@
     var tap_holding = undefined;
     var prev_touch_x = -1;
     var prev_touch_y = -1;
+    // waiting a bit to let the tileset image load
+    function introframe(t) {
+      if (t > 200) {
+        limit = Math.min(t / 3 - 67, rows);
+        for (var y=0; y<limit; y++) {
+          for (var x=0; x<cols; x++) {
+            var symbol = (x*17 ^ y*7) % 64 + 32;
+            ctx.drawImage(sheet, (symbol%16)*8, Math.floor(symbol/16)*8, 8, 8, x*16+2, y*16+2, 16, 16);
+          }
+        }
+      }
+      if (t > 300) {
+        redraw = true;
+        requestAnimationFrame(frame);
+      } else {
+        requestAnimationFrame(introframe);
+      }
+    }
     // screen redraw
     function frame(t) {
       var dt = t - prevt;
@@ -181,6 +199,7 @@
       return;
     }
     function runcommand(cmd) {
+      if (!cmd) {return}
       var args = [];
       var this_arg = "";
       // parsing arguments
@@ -223,7 +242,7 @@
       // running the command
       switch (args[0].toUpperCase()) {
         case "PRINT":
-          return args.slice(1).join(" ");
+          return args.slice(1).join(" ") || " ";
         case "ASSIGN":
           variables[args[1]] = args[2];
           return;
@@ -473,13 +492,25 @@
     addEventListener("touchstart", onmobiletap);
     addEventListener("touchend", onmobilerelease);
     bg.onclick = setcursorontap;
-    // silly temp
-    var temp_text = '\n10 ASSIGN H "HELLO,"\n20 ASSIGN W "WORLD!"\n30 PRINT $H $W\nRUN';
-    write(temp_text, true);
-    curpos = cols;
+    if (window.location.search.includes("run=")) {
+      // base64 best "encryption" ever
+      try {
+        var command = atob(window.location.search.split("run=")[1]).split("\n");
+        var ind = 1;
+        for (var i of command) {program[++ind] = i}
+        running = true;
+      } catch {
+        write("INVALID STARTUP COMMAND", true);
+      }
+    } else {
+      // small demo i guess??
+      var command = '10 ASSIGN H "HELLO,"\n20 ASSIGN W "WORLD!"\n30 PRINT $H $W\nRUN';
+      write(command, true);
+      curpos = 0;
+    }
     writefile("HI", "HELLO FAKE-BASIC!!");
     // entering the loop
-    requestAnimationFrame(frame);
+    requestAnimationFrame(introframe);
   </script>
   </body>
 </html>
