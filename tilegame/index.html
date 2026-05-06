@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="darkreader-lock">
+  <meta property="og:url" content="https://totallynotmeme.github.io/tilegame">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="A Tile Game">
+  <meta property="og:description" content="A Simple tile-clicking game... wait who sent you this link?">
+  <!-- <meta property="og:image" content="https://example.com/example-image.jpg"> will add this later mb-->
+  <meta name="theme-color" content="#66ddff">
+  <title>a tile game</title>
+  <style>
+  * {
+    font-family: monospace;
+    text-align: center;
+    color: white;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    font-weight: unset;
+  }
+  body {
+    background-color: black;
+  }
+  span {
+    font-size: x-large;
+  }
+  input {
+    width: 50px;
+    background-color: black;
+    border: solid 1px white;
+    border-radius: 5px;
+    font-size: large;
+  }
+  select {
+    width: 130px;
+    background-color: black;
+    border: solid 1px white;
+    border-radius: 5px;
+    font-size: large;
+  }
+  #grid {
+    display: grid;
+    grid-template-rows: repeat(5, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+    border: solid #05a 2px;
+    aspect-ratio: 1;
+    width: 80%;
+    max-width: 80vh;
+  }
+  #bar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 10px;
+    background-color: #09f;
+    transition-property: width;
+    transition-duration: 0.05s;
+  }
+  #menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #00000060;
+  }
+  #score {
+    position: absolute;
+    bottom: 0;
+    left: 15px;
+    color: #ffa;
+    font-size: x-large;
+  }
+  #bestScore {
+    position: absolute;
+    bottom: 25px;
+    left: 15px;
+    color: #666;
+    font-size: large;
+  }
+  #actualBestScore {
+    color: #666;
+    font-size: large;
+  }
+  #pauseButton {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 80px;
+    height: 40px;
+    background-color: black;
+    border: solid 1px white;
+    border-radius: 5px;
+    font-size: large;
+    transition-property: left;
+    transition-duration: 0.2s;
+  }
+  .container {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+  }
+  .cell {
+    border: solid #123 1px;
+    cursor: pointer;
+    background-color: #012;
+    transition-property: background-color, transform, border-color;
+    transition-duration: 0.0s, 0.2s, 0.2s;
+    transition-delay: 0.1s, 0.0s, 0.0s;
+    transition-timing-function: linear;
+    transform: rotate3d(1, 0, 0, 0deg);
+  }
+  .cell:hover {
+    border-color: #09f;
+    transition-duration: 0.0s, 0.2s, 0.0s;
+  }
+  .highlight {
+    transform: rotate3d(1, 0, 0, 180deg);
+    background-color: #05a;
+  }
+  .wrongTap {
+    transform: rotate3d(1, 0, 0, 180deg);
+    background-color: #500;
+  }
+  .wrongMiss {
+    transform: rotate3d(1, 0, 0, 180deg);
+    background-color: #800;
+  }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="grid"></div>
+  </div>
+  <div id="bar"></div>
+  <p id="score">Your score will show up here</p>
+  <p id="bestScore">Best: <span id="actualBestScore"></span></p>
+  <div id="menu">
+    <h1>The Tile Game</h1>
+    <h2 id="subHeaderPC">Press ESC to unpause</h2>
+    <h2 id="subHeaderMobile" style="display:none;">Mobile version may be janky, PC is recommended</h2>
+    <div class="container">
+      <h1>Game settings</h1>
+      <span>Preset: <select id="gamePreset">
+        <option value="2000/8000/3/5/30/normal">Standard</option>
+        <option value="1500/5000/1/6/40/normal">Extreme</option>
+        <option value="200/2000/0/6/30/normal">Absurd</option>
+        <option value="2000/8000/9/6/30/zen">Zen</option>
+        <option value="custom">Custom</option>
+      </select></span>
+      <br>
+      <span>Memory time: <input id="fieldMemoryTime" min="100" max="60000"> ms</span>
+      <span>Click time: <input id="fieldClickTime" min="100" max="60000"> ms</span>
+      <span>Allowed: <input id="fieldMistakes" min="0" max="999"> mistakes</span>
+      <span>Grid size: <input id="fieldGridSize" min="1" max="10"> tiles</span>
+      <span>Density: <input id="fieldDensity" min="0" max="100"> %</span>
+      <span>Mode: <select id="gameMode">
+        <option value="normal">Normal</option>
+        <option value="zen">Zen</option>
+      </select></span>
+    </div>
+  </div>
+  <button id="pauseButton" style="left:-100px;">Pause</button>
+<script>
+const menu = document.getElementById("menu");
+const grid = document.getElementById("grid");
+const bar = document.getElementById("bar");
+const score = document.getElementById("score");
+const scoreBestText = document.getElementById("bestScore");
+const scoreBestVal = document.getElementById("actualBestScore");
+const pauseButton = document.getElementById("pauseButton");
+const subHeaderPC = document.getElementById("subHeaderPC");
+const subHeaderMobile = document.getElementById("subHeaderMobile");
+
+var showScore = false;
+var scoreBest = 0;
+var scoreValue = 0;
+var scoreDisplay = 0;
+var gameLost = false;
+const sizeMultiplier = [0, 0.1, 0.2, 0.5, 1, 1.1, 1.2, 1.5, 1.7, 2];
+var timeTaken = 0;
+var memoryTimeTaken = 0;
+
+const cells = [];
+const pattern = [];
+var selected = null;
+var state = "idle";
+
+var updateTimer = 0;
+var prevT = -1;
+var lives = 0;
+var leftToTap = 0;
+var paused = true;
+var holding = false;
+var isMobile = false;
+
+var maxTime = 0;
+var memoryTime = 0;
+var maxLives = 0;
+var gridSize = 5;
+var density = 0;
+
+grid.onmouseleave = () => {selected = null;}
+
+const gamePreset = document.getElementById("gamePreset");
+const gameMode = document.getElementById("gameMode");
+const fieldMemoryTime = document.getElementById("fieldMemoryTime");
+const fieldClickTime = document.getElementById("fieldClickTime");
+const fieldMistakes = document.getElementById("fieldMistakes");
+const fieldGridSize = document.getElementById("fieldGridSize");
+const fieldDensity = document.getElementById("fieldDensity");
+
+gamePreset.onchange = function() {
+  if (gamePreset.value == "custom") {return;}
+  var values = gamePreset.value.split("/");
+  fieldMemoryTime.value = values[0];
+  fieldClickTime.value = values[1];
+  fieldMistakes.value = values[2];
+  fieldGridSize.value = values[3];
+  fieldDensity.value = values[4];
+  gameMode.value = values[5];
+  state = "results";
+  updateTimer = 0;
+  scoreValue = 0;
+}
+gamePreset.onchange();
+
+function normalizeField(el) {
+  if (!el.value || isNaN(el.value)) {el.value = -69420;}
+  if (+el.value < +el.min) {el.value = el.min;}
+  if (+el.value > +el.max) {el.value = el.max;}
+  return el.value;
+}
+function onFieldChange(ev) {
+  var el = ev.target || ev;
+  el.value = el.value.replace(",", ".");
+  normalizeField(el);
+  gamePreset.value = "custom";
+  state = "results";
+  updateTimer = 0;
+  scoreValue = 0;
+}
+fieldMemoryTime.onchange = onFieldChange;
+fieldClickTime.onchange = onFieldChange;
+fieldMistakes.onchange = onFieldChange;
+fieldGridSize.onchange = onFieldChange;
+fieldDensity.onchange = onFieldChange;
+gameMode.onchange = function() {
+  gamePreset.value = "custom";
+  state = "results";
+  updateTimer = 0;
+  scoreValue = 0;
+};
+
+function getcookie(name) {
+  var items = document.cookie.split(";");
+  for (var i of items) {
+    i = i.split("=");
+    if (name == i[0].trim()) {
+      return i[1].trim();
+    }
+  }
+  return;
+}
+scoreBest = parseInt(getcookie("tilegamebest"));
+if (isNaN(scoreBest)) {
+  scoreBest = "";
+}
+scoreBestVal.textContent = scoreBest;
+
+function onHover(ev) {
+  selected = ev.target;
+}
+
+function setGridSize(size) {
+  if (grid.children.length == size*size) {return;}
+  while (grid.children.length > 0) {
+    grid.removeChild(cells.pop(grid.lastElementChild));
+  }
+  while (grid.children.length < size*size) {
+    var a = document.createElement("div");
+    a.className = "cell";
+    a.onmouseover = onHover;
+    a.onclick = onHover;
+    grid.appendChild(a);
+    cells.push(a);
+  }
+  grid.style.gridTemplateRows = "repeat(" + size + ", 1fr)";
+  grid.style.gridTemplateColumns = "repeat(" + size + ", 1fr)";
+}
+
+function processTap() {
+  if (paused) {return;}
+  if (state != "going") {return;}
+  if (selected && (selected.matches(":hover") || isMobile)) {
+    if (pattern.includes(selected)) {
+      if (!selected.classList.contains("highlight")) {
+        selected.classList.add("highlight");
+        leftToTap -= 1;
+        if (leftToTap <= 0) {
+          // win
+          gameLost = false;
+          timeTaken = maxTime - updateTimer;
+          updateTimer = -69;
+        }
+      }
+    } else {
+      if (!selected.classList.contains("wrongTap")) {
+        selected.classList.add("wrongTap");
+        lives -= 1;
+        if (lives < 0) {
+          bar.style.width = "0%";
+          timeTaken = maxTime - updateTimer;
+          updateTimer = -69;
+        }
+      }
+    }
+  }
+}
+
+function frame(t) {
+  if (paused) {return;}
+  var dt = t - prevT;
+  if (prevT == -1) {
+    dt = 0;
+  }
+  updateTimer -= dt;
+  prevT = t;
+  switch(state) {
+    case "idle":
+      if (updateTimer < 0) {
+        for (var i of cells) {
+          bar.style.width = "0%";
+          i.classList.remove("wrongMiss");
+          i.classList.remove("wrongTap");
+          i.classList.remove("highlight");
+        }
+        updateTimer = memoryTime;
+        state = "showing";
+        lives = maxLives;
+        leftToTap = Math.floor(density * cells.length);
+        pattern.length = 0;
+        var i = 0;
+        while (i < leftToTap) {
+          var a = Math.floor(Math.random() * cells.length);
+          a = cells[a];
+          if (!pattern.includes(a)) {
+            pattern.push(a);
+            a.classList.add("highlight");
+            i++;
+          }
+        }
+        gameLost = true; // by default in case we run out of time
+      }
+      break;
+    case "showing":
+      if (updateTimer < 0) {
+        // by default: loss - out of time
+        gameLost = true;
+        updateTimer = maxTime;
+        state = "going";
+        for (var i of pattern) {
+          i.classList.remove("highlight");
+        }
+      } else {
+        memoryTimeTaken = memoryTime - updateTimer;
+      }
+      break;
+    case "going":
+      bar.style.width = (updateTimer / maxTime * 100) + "%";
+      if (updateTimer < 0) {
+        if (gameLost && showScore) {
+          // loss - out of time
+          scoreValue = 0;
+        }
+        updateTimer = 1000;
+        state = "results";
+        for (var i of pattern) {
+          if (!i.classList.contains("highlight")) {
+            i.classList.add("wrongMiss");
+          }
+        }
+        if (showScore) {
+          // calculate score
+          var densityFactor = Math.pow(5 * density * (1 - density), 3);
+          var mistakesMade = maxLives - lives;
+          if (mistakesMade > 5) {
+            mistakesMade = mistakesMade * 3 - 10;
+          }
+          scoreValue = Math.max(gridSize*gridSize * 200 - Math.pow(timeTaken, 0.95), 100); // time
+          scoreValue *= 3 / (mistakesMade + 3); // mistakes
+          scoreValue *= 1000 / (memoryTimeTaken + 1000); // memory time
+          scoreValue *= sizeMultiplier[gridSize-1]; // grid size
+          scoreValue *= densityFactor; // density factor
+          if (gameLost) {
+            scoreValue /= Math.pow(2, leftToTap);
+          }
+          scoreValue = Math.round(scoreValue);
+          if (scoreValue > scoreBest) {
+            scoreBest = scoreValue;
+            // save to cookies as well
+            document.cookie = "tilegamebest=" + scoreValue + "; expires=" +
+                              (new Date("3000")).toUTCString() + "; path=/";
+          }
+          scoreBestVal.textContent = scoreBest;
+        }
+      }
+      break;
+    case "results":
+      if (updateTimer < 0) {
+        updateTimer = 500;
+        state = "idle";
+        for (var i of cells) {
+          bar.style.width = "0%";
+          i.classList.remove("wrongMiss");
+          i.classList.remove("wrongTap");
+          i.classList.remove("highlight");
+        }
+      }
+      break;
+  }
+  if (holding) {processTap();}
+  if (showScore) {
+    scoreDisplay = (scoreDisplay + scoreValue * (dt/100.0)) / (1 + dt/100.0);
+    score.textContent = Math.round(scoreDisplay);
+  }
+  requestAnimationFrame(frame);
+}
+
+function togglePause() {
+  paused = !paused;
+  selected = null;
+  if (paused) {
+    menu.style.display = "";
+  } else {
+    menu.style.display = "none";
+    // apply settings and resume the cycle
+    maxTime = normalizeField(fieldClickTime);
+    memoryTime = normalizeField(fieldMemoryTime);
+    maxLives = normalizeField(fieldMistakes);
+    density = normalizeField(fieldDensity) / 100.0;
+    gridSize = Math.round(normalizeField(fieldGridSize));
+    setGridSize(gridSize);
+    showScore = gameMode.value == "normal";
+    if (showScore) {
+      score.style.display = "";
+      scoreBestText.style.display = "";
+      bar.style.height = "";
+    } else {
+      score.style.display = "none";
+      scoreBestText.style.display = "none";
+      bar.style.height = "5px";
+    }
+    scoreDisplay = scoreValue;
+    prevT = -1;
+    requestAnimationFrame(frame);
+  }
+}
+
+function dotap() {
+  holding = true;
+  if (state == "showing") {
+    updateTimer = 0;
+  }
+  if (isMobile) {
+    pauseButton.style.left = "";
+    subHeaderPC.style.display = "none";
+    subHeaderMobile.style.display = "";
+  } else {
+    pauseButton.style.left = "-100px";
+    subHeaderPC.style.display = "";
+    subHeaderMobile.style.display = "none";
+  }
+}
+function untap() {holding = false;}
+function keyEvent(ev) {
+  isMobile = false;
+  if (ev.key == "Escape") {
+    ev.preventDefault();
+    togglePause();
+  } else {
+    if (paused) {return;}
+    if (ev.key && ev.key.length != 1) {return;}
+    ev.preventDefault();
+    dotap();
+  }
+}
+function mobileTapEvent(ev) {
+  isMobile = true;
+  if (cells.includes(ev.target)) {
+    selected = ev.target;
+    ev.preventDefault();
+  }
+  dotap();
+}
+pauseButton.onclick = togglePause;
+
+setGridSize(gridSize);
+addEventListener("keydown", keyEvent);
+addEventListener("mousedown", dotap);
+addEventListener("touchstart", mobileTapEvent);
+addEventListener("keyup", untap);
+addEventListener("mouseup", untap);
+addEventListener("touchend", untap);
+</script>
+</body>
+</html>
