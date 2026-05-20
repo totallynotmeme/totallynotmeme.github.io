@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta property="og:url" content="https://totallynotmeme.github.io/catbot-packs">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Cat Bot Pack opening Simulator">
+  <meta property="og:description" content="a page that allows you to open a ton of packs without any grind">
+  <!-- <meta property="og:image" content="https://example.com/example-image.jpg"> will add this later mb-->
+  <meta name="theme-color" content="#66ddff">
+  <title>• Not Discord | @Cat Bot</title>
+  <style>
+    * {
+      scrollbar-width: none;
+      font-family: 'gg sans', sans-serif;
+    }
+    body {
+      background-color: #323339;
+      overflow-x: hidden;
+      font-family: monospace;
+    }
+    div {
+      color: white;
+    }
+    a {
+      color: #75adf8;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: revert;
+    }
+    input {
+      display: none;
+      background: none;
+      border: none;
+      color: white;
+      font-weight: bold;
+      width: 32px;
+      margin-left: 7px;
+    }
+    input:focus {
+      display: revert;
+      outline: none;
+      color: #bdf;
+    }
+    .username:hover {
+      text-decoration: underline;
+      cursor: pointer;
+    }
+    .profilepic {
+      border-radius: 50%;
+    }
+    .packContainer {
+      display: flex;
+      align-items: center;
+    }
+    .packButton {
+      border: solid 1px;
+      border-radius: 5px;
+      padding: 3px 11px;
+      cursor: pointer;
+      transition: background-color 170ms;
+      font-weight: bold;
+    }
+    .colorGreen {
+      background-color: #008545;
+      border-color: #148f54;
+    }
+    .colorGreen:hover {
+      background-color: #006c37;
+      border-color: #146c40;
+    }
+    .colorGreen:active {
+      background-color: #005f30;
+      border-color: #146c40;
+    }
+    .colorBlue {
+      background-color: #5865f2;
+      border-color: #6571f3;
+    }
+    .colorBlue:hover {
+      background-color: #4452bb;
+      border-color: #5360c0;
+    }
+    .colorBlue:active {
+      background-color: #3a48a3;
+      border-color: #4956aa;
+    }
+    .colorGray {
+      background-color: #3a3b41;
+      border-color: #3d3e45;
+    }
+    .colorGray:hover {
+      background-color: #42434a;
+      border-color: #45464d;
+    }
+    .colorGray:active {
+      background-color: #4c4d54;
+      border-color: #505057;
+    }
+    .emoji {
+      width: 19px;
+      height: 19px;
+      margin-inline-end: 4px;
+      vertical-align: center;
+    }
+    #messageHeader {
+      position: relative;
+      margin-left: 56px;
+      margin-bottom: 2px;
+      font-size: 14px;
+      user-select: none;
+    }
+    #grayThing {
+      position: absolute;
+      translate: 19px 8.5px;
+      width: 31px;
+      height: 10.9px;
+      border: solid 2px #595a63;
+      border-top-left-radius: 6px;
+      border-bottom: none;
+      border-right: none;
+    }
+    #commandWrapper {
+      display: inline;
+      background-color: #3b3f65;
+      color: #76aff6;
+      padding: 2px;
+      border-radius: 3px;
+    }
+    #commandWrapper:hover {
+      background-color: #5865f2;
+      color: white;
+    }
+    #bigpfp {
+      width: 40px;
+      height: 40px;
+      float: left;
+      margin-top: 2px;
+    }
+    #smallpfp {
+      width: 16px;
+      height: 16px;
+    }
+    #botName {
+      padding-left: 15px;
+      padding-top: 3px;
+      display: flow-root
+    }
+    #messageAuthor {
+      display: inline;
+      inset-inline-start: 16px;
+      user-select: none;
+    }
+    #verifiedBadge {
+      border-radius: 4px;
+      height: 0.9375rem;
+      margin-top: 0.2em;
+      padding: 0px 0.275rem;
+      background-color: #5865f2;
+      margin-inline-start: 0.25rem;
+      display: inline-block;
+      vertical-align: bottom;
+    }
+    #verifiedBadge>svg {
+      height: 1rem;
+      margin-inline-start: -0.2rem;
+      margin-top: -0.02rem;
+      width: 1rem;
+    }
+    #verifiedBadge>b {
+      font-size: 0.8rem;
+      line-height: 0.9375rem;
+      vertical-align: top;
+    }
+    #timestamp {
+      color: #9d9ea5;
+      margin-inline-start: 0.25rem;
+      font-size: 0.75rem;
+    }
+    .embedContainer {
+      background-color: #393a41;
+      border: 1px solid #44454c;
+      border-inline-start: 4px solid #6e593c;
+      border-radius: 4px;
+      margin: 5px 55px;
+      box-sizing: border-box;
+      padding-block: .5rem 1rem;
+      padding-inline: .75rem 1rem;
+      padding-top: .125rem;
+      max-width: max-content;
+      font-size: 14px;
+    }
+    .embedContainer>div {
+      margin-top: 8px;
+      max-width: 500px;
+    }
+    .embedHeader>b {
+      vertical-align: center;
+    }
+    .buttonsContainer {
+      width: 55%;
+      margin-left: 55px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+<div class="message">
+  <div id="grayThing"></div>
+  <div id="messageHeader">
+    <img
+      class="profilepic"
+      id="smallpfp"
+      src="https://raw.githubusercontent.com/staring-cat/emojis/refs/heads/main/spawning/default/realcat.png"
+    ><b class="username" style="color: #b5b5b8;">You</b>
+    used
+    <div id="commandWrapper">
+      <svg width="10" height="10" fill="none" viewBox="0 0 24 24" style="margin-inline-end: 3px;">
+        <!-- path data straight from Discord's UI using devtools -->
+        <path fill="currentColor" d="M2.06 7.61c-.25.95.31 1.92 1.26 2.18l4.3 1.15c.94.25 1.91-.31 2.17-1.26l1.15-4.3c.25-.94-.31-1.91-1.26-2.17l-4.3-1.15c-.94-.25-1.91.31-2.17 1.26l-1.15 4.3ZM12.98 7.87a2 2 0 0 0 1.75 2.95H20a2 2 0 0 0 1.76-2.95l-2.63-4.83a2 2 0 0 0-3.51 0l-2.63 4.83ZM5.86 13.27a.89.89 0 0 1 1.28 0l.75.77a.9.9 0 0 0 .54.26l1.06.12c.5.06.85.52.8 1.02l-.13 1.08c-.02.2.03.42.14.6l.56.92c.27.43.14 1-.28 1.26l-.9.58a.92.92 0 0 0-.37.48l-.36 1.02a.9.9 0 0 1-1.15.57l-1-.36a.89.89 0 0 0-.6 0l-1 .36a.9.9 0 0 1-1.15-.57l-.36-1.02a.92.92 0 0 0-.37-.48l-.9-.58a.93.93 0 0 1-.28-1.26l.56-.93c.11-.17.16-.38.14-.59l-.12-1.08c-.06-.5.3-.96.8-1.02l1.05-.12a.9.9 0 0 0 .54-.26l.75-.77ZM18.52 13.71a1.1 1.1 0 0 0-2.04 0l-.46 1.24c-.19.5-.57.88-1.07 1.07l-1.24.46a1.1 1.1 0 0 0 0 2.04l1.24.46c.5.19.88.57 1.07 1.07l.46 1.24c.35.95 1.7.95 2.04 0l.46-1.24c.19-.5.57-.88 1.07-1.07l1.24-.46a1.1 1.1 0 0 0 0-2.04l-1.24-.46a1.8 1.8 0 0 1-1.07-1.07l-.46-1.24Z"></path>
+      </svg>packs
+    </div>
+  </div>
+  <div id="messageAuthor">
+    <img src="catbotpfp.webp" class="profilepic" id="bigpfp">
+    <span id="botName">
+      <b class="username">Cat Bot</b>
+      <span id="verifiedBadge">
+        <svg width="24" height="24" fill="none" viewBox="0 0 24 24">
+          <!-- another path data straight from Discord's UI using devtools -->
+          <path fill="#ffffff" d="M19.06 6.94a1.5 1.5 0 0 1 0 2.12l-8 8a1.5 1.5 0 0 1-2.12 0l-4-4a1.5 1.5 0 0 1 2.12-2.12L10 13.88l6.94-6.94a1.5 1.5 0 0 1 2.12 0Z" clip-rule="evenodd"></path>
+        </svg><b>APP</b>
+      </span>
+      <span id="timestamp">12:34</span>
+    </span>
+  </div>
+  <div id="menuStart">
+    <div class="embedContainer">
+      <div class="embedHeader">
+        <img
+          class="emoji"
+          src="https://raw.githubusercontent.com/staring-cat/emojis/refs/heads/main/goldpack.png"
+        ><b>Packs</b>
+      </div>
+      <div class="embedContent">
+        Each pack starts at one of eight tiers of increasing value -
+        Wooden, Stone, Bronze, Silver, Gold, Platinum, Diamond, or
+        Celestial - and can repeatedly move up tiers with a 30% chance per
+        upgrade. This means that even a pack starting at Wooden, through
+        successive upgrades, can reach the Celestial tier.
+        <br>
+        <a href="https://catbot.minkos.lol/packs" target="_blank" title="Chance Info
+
+(https://catbot.minkos.lol/packs)">Chance Info</a>
+        <br><br>
+        <strong>Special Packs</strong>
+        are packs highlighted in green. Their upgrade chance is 70%
+        instead of 30% and they start below Wooden.
+        <br><br>
+        Click the buttons below to start opening packs!
+      </div>
+    </div>
+  </div>
+  <div id="menuOpeningSingle" style="display: none;">
+    <div class="embedContainer">
+      <div class="embedHeader">
+        <img
+          class="emoji"
+          src=""
+          id="openingPackEmoji"
+        ><b id="openingPackName">Void pack</b>
+      </div>
+      <div class="embedContent" id="openingPackContent">You got nothing!</div>
+    </div>
+  </div>
+  <div id="menuOpeningMulti" style="display: none;">
+    <div class="embedContainer">
+      <div class="embedHeader">
+        <b>Opened <span id="openingMultiPackCount">Zero</span> packs!</b>
+      </div>
+      <div class="embedContent" id="openingMultiPackContent">silence.</div>
+    </div>
+  </div>
+  <div class="buttonsContainer" id="buttonsAllPacks"></div>
+</div>
+
+<template id="templatePackButton"><button class="packButton">
+  <div class="packContainer">
+    <img class="emoji">
+    <span class="packLabel"></span>
+    <input>
+  </div>
+</button></template>
+
+<script>
+const buttonTemplate = document.getElementById("templatePackButton");
+const buttonsContainer = document.getElementById("buttonsAllPacks");
+
+const menuStart = document.getElementById("menuStart");
+const menuOpeningSingle = document.getElementById("menuOpeningSingle");
+const menuOpeningMulti = document.getElementById("menuOpeningMulti");
+const menus = [menuStart, menuOpeningSingle, menuOpeningMulti];
+var activeContent = null;
+
+const openingPackEmoji = document.getElementById("openingPackEmoji");
+const openingPackName = document.getElementById("openingPackName");
+const openingPackContent = document.getElementById("openingPackContent");
+
+const openingMultiPackCount = document.getElementById("openingMultiPackCount");
+const openingMultiPackContent = document.getElementById("openingMultiPackContent");
+
+const emojisPath = "https://raw.githubusercontent.com/staring-cat/emojis/refs/heads/main/";
+const specials = ["Christmas", "Valentine", "Chef", "Birthday"]; // value = 30
+const packs = {
+  "Wooden": 65,
+  "Stone": 90,
+  "Bronze": 100,
+  "Silver": 115,
+  "Gold": 230,
+  "Platinum": 630,
+  "Diamond": 860,
+  "Celestial": 2000,
+};
+const packsList = Object.keys(packs);
+const inventory = {};
+
+const cats = {
+  // taken straight from cat bot's source code
+  "Fine": 1000,
+  "Nice": 750,
+  "Good": 500,
+  "Rare": 350,
+  "Wild": 275,
+  "Gremlin": 230,
+  "Epic": 200,
+  "Sus": 175,
+  "Brave": 150,
+  "Rickroll": 125,
+  "Reverse": 100,
+  "Superior": 80,
+  "Trash": 50,
+  "Legendary": 35,
+  "Mythic": 25,
+  "8bit": 20,
+  "Corrupt": 15,
+  "Professor": 10,
+  "Divine": 8,
+  "Real": 5,
+  "Ultimate": 3,
+  "eGirl": 2,
+};
+const catsArray = Object.keys(cats);
+const catsValuePool = Math.sumPrecise(Object.values(packs));
+const queue = [];
+
+function updateEmbedAnimation() {
+    if (queue.length > 0) {
+        setTimeout(updateEmbedAnimation, 1000);
+        var element = queue.shift();
+        if (element.textContent.includes("Upgraded")) {
+            // insert upgrade line on top
+            activeContent.insertBefore(element, activeContent.firstChild);
+            // and because we're hard-coding everything let's also change the title
+            var packType = element.innerHTML.split("<!--")[1].split("-->")[0];
+            openingPackName.textContent = packType;
+            openingPackEmoji.src = emojisPath + packType.toLowerCase() + "pack.png";
+        } else {
+            activeContent.appendChild(element);
+        }
+    } else {
+        buttonsContainer.style.display = "";
+    }
+}
+
+function showPackField(ev, target, packText) {
+    ev.preventDefault();
+    target.style.display = "unset";
+    target.select();
+    packText.textContent = packText.textContent.split(" ")[0];
+}
+
+// stolen from myself at /tilegame with minumum changes
+function normalizeField(el) {
+    if (el.value.includes("(")) {
+        el.value = el.value.split("(")[1];
+    }
+    if (el.value.includes(")")) {
+        el.value = el.value.split(")")[0];
+    }
+    if (!el.value || isNaN(el.value)) {el.value = 0;}
+    if (+el.value < 0) {el.value = 0;}
+    if (+el.value > 99999) {el.value = 99999;}
+    return el.value;
+}
+
+function processPackField(ev, packText) {
+    var target = ev.target;
+    var result = normalizeField(target);
+    var packType = packText.textContent.split(" ")[0];
+    target.style.display = "";
+    inventory[packType] = +result;
+    if (result == 0) {
+        target.value = "";
+    } else {
+        packText.textContent += " (" + result + ")";
+    }
+    openAllSpan.textContent = openAllSpan.textContent.split("!")[0] + "!";
+    var totalPacks = Math.sumPrecise(Object.values(inventory));
+    if (totalPacks > 0) {
+        openAllSpan.textContent += " (" + totalPacks + ")";
+    }
+}
+
+function setMessageEmbed(which) {
+    for (var i of menus) {
+        i.style.display = "none";
+    }
+    which.style.display = "";
+}
+
+function processPackReward(packType, queue=null) {
+    // this function is spaghetti, but so is Cat Bot's code, so this checks out
+    var catType = catsArray[Math.floor(Math.random() * catsArray.length)];
+    var a;
+    
+    // upgrading the pack
+    var firstUpgrade = true;
+    while (packType != "Celestial") {
+        // 30% for normal packs, 70% for specials
+        if (Math.random() >= (packType in packs ? 0.30 : 0.70)) {break;}
+        if (queue) {
+            a = document.createElement("span");
+            a.innerHTML = `Upgraded from <img class="emoji" src="${emojisPath + packType.toLowerCase()}pack.png">${packType}!<br>`;
+        }
+        packType = packsList[packsList.indexOf(packType) + 1];
+        if (queue) {
+            a.innerHTML += "<!--" + packType + "-->";
+            if (firstUpgrade) {
+                firstUpgrade = false;
+                a.innerHTML += "<br>";
+            }
+            queue.push(a);
+        }
+    }
+    //console.log("after upgrade:", packType);
+    
+    // cat stuff
+    var packValue = packType in packs ? packs[packType] : 30;
+    var catAmount = packValue * cats[catType] / catsValuePool;
+    var addRandomCat = Math.random() < catAmount%1;
+    
+    if (catAmount < 1) {
+        var chance = Math.round(catAmount * 10000) / 100 + "%";
+        //console.log("random", catType, "with chance", chance);
+        if (queue) {
+            a = document.createElement("span");
+            a.innerHTML = `${chance} for a <img class="emoji" src="${emojisPath}spawning/default/${catType.toLowerCase()}cat.png">${catType} cat`;
+            queue.push(a);
+            a = document.createElement("span");
+            a.textContent = ".";
+            queue.push(a);
+            a = document.createElement("span");
+            a.textContent = ".";
+            queue.push(a);
+            a = document.createElement("span");
+            a.textContent = ".";
+            queue.push(a);
+            a = document.createElement("span");
+        }
+        if (addRandomCat) {
+            if (queue) {a.innerHTML = "<br>✅ Success!<br>";}
+        } else {
+            if (queue) {a.innerHTML = "<br>❌ Fail!<br>";}
+            catType = "Fine";
+        }
+        if (queue) {queue.push(a);}
+        catAmount = 1;
+    } else {
+        if (addRandomCat) {catAmount++;}
+        catAmount = Math.floor(catAmount);
+        //console.log("constant", catAmount, catType, "'s");
+    }
+    //console.log("ended with", catAmount, catType, "cars");
+    return [catType, catAmount];
+}
+
+function animateSinglePack(packType) {
+    var [catType, catAmount] = processPackReward(packType, queue);
+    
+    openingPackName.textContent = packType;
+    openingPackEmoji.src = emojisPath + packType.toLowerCase() + "pack.png";
+    openingPackContent.innerHTML = "";
+    
+    a = document.createElement("span");
+    a.innerHTML = `You got <img class="emoji" src="${emojisPath}spawning/default/${catType.toLowerCase()}cat.png">${catAmount} ${catType} cats!`;
+    queue.push(a);
+    
+    setMessageEmbed(menuOpeningSingle);
+    activeContent = openingPackContent;
+    setTimeout(updateEmbedAnimation, 1000);
+    buttonsContainer.style.display = "none";
+}
+
+function animateMultiPack() {
+    var totalPacks = Math.sumPrecise(Object.values(inventory));
+    if (totalPacks == 0) {
+        openingMultiPackCount.textContent = "absolutely no";
+        a = document.createElement("span");
+        a.innerHTML = "You can <b>Right click</b> the pack buttons to set the amount you want to open!";
+        queue.push(a);
+    } else {
+        openingMultiPackCount.textContent = totalPacks;
+        // header
+        var headerLines = [];
+        for (var i of specials.concat(Object.keys(packs))) {
+            if (inventory[i] > 0) {
+                var line = `${inventory[i]}x <img class="emoji" src="${emojisPath + i.toLowerCase()}pack.png">`;
+                headerLines.push(line);
+            }
+        }
+        a = document.createElement("span");
+        a.innerHTML = "<b>" + headerLines.join(", ") + "</b><br><br>";
+        queue.push(a);
+        // parsing the packs
+        var catsGot = {};
+        var catLines = [];
+        var totalCats = 0;
+        var totalValue = 0;
+        for (var i of catsArray) {catsGot[i] = 0};
+        a = document.createElement("span");
+        if (totalPacks < 1000000) { // todo: approximate the amount of cats for large numbers
+            for (var i in inventory) {
+                for (var iter = 0; iter < inventory[i]; iter++) {
+                    var [catType, catAmount] = processPackReward(i);
+                    catsGot[catType] += catAmount;
+                    totalCats += catAmount;
+                }
+            }
+            for (var i of catsArray) {
+                if (catsGot[i] > 0) {
+                    catLines.push(`<img class="emoji" src="${emojisPath}spawning/default/${i.toLowerCase()}cat.png"> x${catsGot[i]}`);
+                    totalValue += catsGot[i] * catsValuePool / cats[i];
+                }
+            }
+            a.innerHTML = catLines.join("<br>");
+            totalValue = Math.floor(totalValue * 100) / 100;
+            a.innerHTML += `<br><br>(this is about ${totalValue} value in ${totalCats} cats)`;
+        } else {
+            a.innerHTML = "<br>...WHAT no that's too many packs, your device will blow up :sob:";
+        }
+        queue.push(a);
+    }
+    
+    openingMultiPackContent.innerHTML = "";
+    
+    setMessageEmbed(menuOpeningMulti);
+    activeContent = openingMultiPackContent;
+    updateEmbedAnimation(); // no need for timeout on the first line
+    buttonsContainer.style.display = "none";
+}
+
+for (let i of specials.concat(Object.keys(packs))) {
+    var a = buttonTemplate.content.cloneNode(true);
+    a.querySelector("img").src = emojisPath + i.toLowerCase() + "pack.png";
+    let aSpan = a.querySelector("span");
+    aSpan.textContent = i;
+    // adding the button
+    var aButton = a.querySelector("button");
+    if (specials.includes(i)) {
+        aButton.classList.add("colorGreen");
+    } else {
+        aButton.classList.add("colorBlue");
+    }
+    aButton.onclick = (ev) => {animateSinglePack(i)};
+    // and the input field
+    let aInput = a.querySelector("input")
+    aButton.oncontextmenu = (ev) => {showPackField(ev, aInput, aSpan)};
+    aInput.onblur = (ev) => {processPackField(ev, aSpan)};
+    
+    buttonsContainer.appendChild(a);
+}
+
+const openAllButton = buttonTemplate.content.cloneNode(true);
+
+aButton = openAllButton.querySelector("button");
+aButton.classList.add("colorGray");
+aButton.onclick = animateMultiPack;
+openAllButton.querySelector("img").style.display = "none";
+
+const openAllSpan = openAllButton.querySelector("span")
+openAllSpan.textContent = "Open All!";
+
+buttonsContainer.appendChild(openAllButton);
+</script>
+</body>
+</html>
