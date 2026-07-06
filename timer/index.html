@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="darkreader-lock">
+  <meta property="og:url" content="https://totallynotmeme.github.io/timer">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="A normal timer">
+  <meta property="og:description" content="A completely normal 10-minute timer that may or may not have been taken over by bees">
+  <!-- <meta property="og:image" content="https://example.com/example-image.jpg"> will add this later mb-->
+  <meta name="theme-color" content="#66ddff">
+  <title>Timer</title>
+  <style>
+  * {
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    font-weight: unset;
+  }
+  body {
+    background-color: black;
+  }
+  a { /* links */
+    color: #0f9;
+  }
+  .hiddenTop {
+    top: -50px !important;
+  }
+  .hiddenBottom {
+    bottom: -100px !important;
+  }
+  #timer {
+    font-family: Segoe UI;
+    font-weight: bold;
+    font-size: min(20vw, 60vh);
+    text-align: center;
+    background-image: linear-gradient(0deg, #3cb759, #79ea9c);
+    background-clip: text;
+    color: transparent;
+  }
+  #timerContainer {
+    height: 100vh;
+    align-content: center;
+  }
+  #hours:not(:empty)::after {
+    content: ":";
+  }
+  #minutes:not(:empty)::after {
+    content: ":";
+  }
+  #spsStatus {
+    position: absolute;
+    top: 10px;
+    left: 50px;
+    font-family: monospace;
+    font-size: 2em;
+    color: white;
+    transition: top ease-out 0.2s;
+  }
+  #settingsButton {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-family: monospace;
+    font-size: 2em;
+    color: #222;
+    transition-property: color, left;
+    transition-duration: 0.4s;
+    transition-timing-function: cubic-bezier(0.08, 0.82, 0.17, 1);
+    cursor: pointer;
+  }
+  #settingsButton:hover {
+    color: white;
+  }
+  #settingsPanel {
+    position: absolute;
+    top: 0;
+    width: 49%;
+    height: 100vh;
+    background-color: black;
+    opacity: 0.9;
+    border-right: solid 2px white;
+    transition: left cubic-bezier(0.08, 0.82, 0.17, 1) 0.4s;
+  }
+  #settingsContainer {
+    font-size: 1.5em;
+    font-family: monospace;
+    margin: 20px;
+    color: white;
+  }
+  #startTimerButton {
+    position: absolute;
+    bottom: 15px;
+    right: 15px;
+    padding: 10px 15px;
+    font-size: x-large;
+    background: none;
+    color: white;
+    border: solid 1px white;
+    border-radius: 10px;
+    transition: bottom cubic-bezier(0.08, 0.82, 0.17, 1) 0.4s;
+    cursor: pointer;
+    overflow: visible;
+  }
+  #disclaimerAboveButton {
+    position: absolute;
+    bottom: 55px;
+    right: 0px;
+    width: 100%;
+    color: yellow;
+    font-size: medium;
+  }
+  #beeImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: none;
+  }
+  </style>
+</head>
+<body>
+<div id="timerContainer">
+  <div id="timer">
+    <span id="timerPrefix"></span><!--
+ --><span id="hours"></span><!--
+ --><span id="minutes">10</span><!--
+ --><span id="seconds">00</span>
+  </div>
+</div>
+<div id="spsStatus" class="hiddenTop">
+  1 second = <span id="secondsPerSecond"></span> seconds
+</div>
+<img id="beeImage" src="bee.jpg" alt="ohnobees">
+<div id="settingsButton">☰</div>
+<div id="settingsPanel" style="left: -50%">
+  <div id="settingsContainer">
+    <span style="font-size: 2em">Settings are not implemented yet...</span><br><br>
+    In the future, there will be options to customize the behavior of the timer and choose between different presets from the original video (Legacy / Balanced / ...)
+    <br><br><br><br>
+    For now feel free to check out the credits:<br>
+    <br>The timer "borrowed" from <a href="https://youtu.be/FTUdUAfcsfY">This VOD</a>
+    <br>Bee sounds taken from <a href="https://youtu.be/sAzgQD8W06w">This video</a>
+    <br>Bee image taken from <a href="https://www.colonialpest.com/2012/02/23/how-to-deal-with-a-honey-bee-swarm/">This article</a>
+  </div>
+</div>
+<button id="startTimerButton">
+  Start the timer
+  <span id="disclaimerAboveButton">Warning: loud bees</span>
+</button>
+
+<script>
+const settingsButton = document.getElementById("settingsButton");
+const settingsPanel = document.getElementById("settingsPanel");
+var isSettingsOpen = false;
+settingsButton.onclick = () => {
+  isSettingsOpen = !isSettingsOpen;
+  if (isSettingsOpen) {
+    settingsButton.style.left = "50%";
+    settingsButton.style.color = "white";
+    settingsPanel.style.left = "0";
+  } else {
+    settingsButton.style.left = "";
+    settingsButton.style.color = "";
+    settingsPanel.style.left = "-50%";
+  }
+}
+
+const timerHours = document.getElementById("hours");
+const timerMinutes = document.getElementById("minutes");
+const timerSeconds = document.getElementById("seconds");
+const timerPrefix = document.getElementById("timerPrefix");
+const startTimerButton = document.getElementById("startTimerButton");
+
+const secondsPerSecondContainer = document.getElementById("spsStatus");
+const secondsPerSecondText = document.getElementById("secondsPerSecond");
+const notTheBeesImg = document.getElementById("beeImage");
+const notTheBeesSnd = new Audio("bee.mp3");
+
+var timeLeft = 600;
+var howLongIsASecond = 1000;
+var countdownTimerActive = true;
+var extraSleep = 0;
+
+// effects
+const effAddSecond = () => {timeLeft += 1};
+const effAddMinute = () => {timeLeft += 60};
+const effDropMinute = () => {timeLeft -= 60};
+const effFreeze = () => {extraSleep = howLongIsASecond * 4};
+const effDouble = () => {timeLeft *= 2};
+const effHalve = () => {timeLeft = Math.floor(timeLeft / 2)};
+const effSwap = () => {timeLeft = (timeLeft % 60 * 60) + Math.floor(timeLeft / 60)};
+const effRoundMinute = () => {timeLeft = Math.round(timeLeft / 60) * 60};
+const effDoubleSpeed = () => {howLongIsASecond /= 2};
+const effHalveSpeed = () => {howLongIsASecond *= 2};
+const effBEEMODE = () => {
+  notTheBeesImg.style.display = "unset";
+  notTheBeesSnd.currentTime = 0;
+  notTheBeesSnd.play();
+  extraSleep = howLongIsASecond;
+  setTimeout(() => {notTheBeesImg.style.display = ""}, howLongIsASecond);
+};
+const effDropSecond = () => {timeLeft -= 1};
+// after-legacy effects
+const effResetSpeed = () => {howLongIsASecond = 1000};
+
+const defaultProgram = [
+  [effAddSecond, 5],
+  [effAddMinute, 1],
+  [effDropMinute, 1],
+  [effFreeze, 5],
+  [effDouble, 1],
+  [effHalve, 1],
+  [effSwap, 1],
+  [effRoundMinute, 1],
+  // moving to a random spot not supported (1%)
+  [effDoubleSpeed, 1],
+  [effHalveSpeed, 1],
+  [effBEEMODE, 1],
+  [effDropSecond, 81], // fun fact: this is NOT, in fact, an 83% chance
+  // vvv temporary: not in the legacy program, but i want to use all effects rn
+  [effResetSpeed, 1],
+]
+var program = [];
+var totalWeight = 0;
+
+function updateTimer() {
+  if (timeLeft < 0) {
+    timerPrefix.textContent = "-";
+    timeLeft *= -1;
+    countdownTimerActive = false;
+  } else {
+    timerPrefix.textContent = "";
+  }
+  const seconds = (timeLeft % 60).toString().padStart(2, "0");
+  const minutes = (Math.floor(timeLeft / 60) % 60).toString().padStart(2, "0");
+  var hours = ""
+  if (timeLeft >= 3600) {
+    hours = (Math.floor(timeLeft / 3600)).toString().padStart(2, "0");
+    document.title = `${hours}:${minutes}:${seconds}`;
+  } else {
+    hours = "";
+    document.title = `${minutes}:${seconds}`;
+  }
+  timerSeconds.textContent = seconds;
+  timerMinutes.textContent = minutes;
+  timerHours.textContent = hours;
+}
+
+function loadProgram(prog) {
+  program = prog;
+  totalWeight = -1; // he used random.randint(**1**, 100) im crine
+  prog.forEach((i) => {totalWeight += i[1]});
+}
+
+function timerStep() {
+  updateTimer();
+  if (howLongIsASecond != 1000) {
+    secondsPerSecondContainer.classList.remove("hiddenTop");
+  }
+  secondsPerSecondText.textContent = howLongIsASecond / 1000;
+  if (timeLeft <= 0 || !countdownTimerActive) {
+    startTimerButton.classList.remove("hiddenBottom");
+    return;
+  }
+  extraSleep = 0;
+  var randomEvent = Math.random() * totalWeight + 1;
+  for (var i in program) {
+    randomEvent -= program[i][1];
+    if (randomEvent < 0) {
+      program[i][0](); // run the effect
+      break;
+    }
+  }
+  setTimeout(timerStep, howLongIsASecond + extraSleep);
+}
+
+loadProgram(defaultProgram);
+startTimerButton.onclick = () => {
+  startTimerButton.classList.add("hiddenBottom");
+  timeLeft = 600;
+  howLongIsASecond = 1000;
+  countdownTimerActive = true;
+  extraSleep = 0;
+  timerStep();
+}
+</script>
+</body>
+</html>
