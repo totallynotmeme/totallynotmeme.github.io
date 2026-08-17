@@ -214,7 +214,7 @@
     <img
       class="profilepic"
       id="smallpfp"
-      src="https://raw.githubusercontent.com/staring-cat/emojis/refs/heads/main/spawning/default/realcat.png"
+      src="https://raw.githubusercontent.com/staring-cat/emojis/refs/heads/main/cattypes/default/normal/realcat.png"
     ><b class="username" style="color: #b5b5b8;">You</b>
     used
     <div id="commandWrapper">
@@ -242,7 +242,7 @@
       <div class="embedHeader">
         <img
           class="emoji"
-          src="https://raw.githubusercontent.com/staring-cat/emojis/refs/heads/main/goldpack.png"
+          src="https://raw.githubusercontent.com/staring-cat/emojis/refs/heads/main/base/packs/goldpack.png"
         ><b>Packs</b>
       </div>
       <div class="embedContent">
@@ -312,7 +312,8 @@ const openingPackContent = document.getElementById("openingPackContent");
 const openingMultiPackCount = document.getElementById("openingMultiPackCount");
 const openingMultiPackContent = document.getElementById("openingMultiPackContent");
 
-const emojisPath = "https://raw.githubusercontent.com/staring-cat/emojis/refs/heads/main/";
+const packEmojisPath = "https://raw.githubusercontent.com/staring-cat/emojis/refs/heads/main/base/packs/";
+const catEmojisPath = "https://raw.githubusercontent.com/staring-cat/emojis/refs/heads/main/cattypes/default/normal/";
 const specials = ["Christmas", "Valentine", "Chef", "Birthday"]; // value = 30
 const packs = {
   "Wooden": 65,
@@ -366,7 +367,7 @@ function updateEmbedAnimation() {
             // and because we're hard-coding everything let's also change the title
             var packType = element.innerHTML.split("<!--")[1].split("-->")[0];
             openingPackName.textContent = packType;
-            openingPackEmoji.src = emojisPath + packType.toLowerCase() + "pack.png";
+            openingPackEmoji.src = packEmojisPath + packType.toLowerCase() + "pack.png";
         } else {
             activeContent.appendChild(element);
         }
@@ -433,7 +434,7 @@ function processPackReward(packType, queue=null) {
         if (Math.random() >= (packType in packs ? 0.30 : 0.70)) {break;}
         if (queue) {
             a = document.createElement("span");
-            a.innerHTML = `Upgraded from <img class="emoji" src="${emojisPath + packType.toLowerCase()}pack.png">${packType}!<br>`;
+            a.innerHTML = `Upgraded from <img class="emoji" src="${packEmojisPath + packType.toLowerCase()}pack.png">${packType}!<br>`;
         }
         packType = packsList[packsList.indexOf(packType) + 1];
         if (queue) {
@@ -457,7 +458,7 @@ function processPackReward(packType, queue=null) {
         //console.log("random", catType, "with chance", chance);
         if (queue) {
             a = document.createElement("span");
-            a.innerHTML = `${chance} for a <img class="emoji" src="${emojisPath}spawning/default/${catType.toLowerCase()}cat.png">${catType} cat`;
+            a.innerHTML = `${chance} for a <img class="emoji" src="${catEmojisPath}${catType.toLowerCase()}cat.png">${catType} cat`;
             queue.push(a);
             a = document.createElement("span");
             a.textContent = ".";
@@ -491,11 +492,11 @@ function animateSinglePack(packType) {
     var [catType, catAmount] = processPackReward(packType, queue);
     
     openingPackName.textContent = packType;
-    openingPackEmoji.src = emojisPath + packType.toLowerCase() + "pack.png";
+    openingPackEmoji.src = packEmojisPath + packType.toLowerCase() + "pack.png";
     openingPackContent.innerHTML = "";
     
     a = document.createElement("span");
-    a.innerHTML = `You got <img class="emoji" src="${emojisPath}spawning/default/${catType.toLowerCase()}cat.png">${catAmount} ${catType} cats!`;
+    a.innerHTML = `You got <img class="emoji" src="${catEmojisPath}${catType.toLowerCase()}cat.png">${catAmount} ${catType} cats!`;
     queue.push(a);
     
     setMessageEmbed(menuOpeningSingle);
@@ -517,7 +518,7 @@ function animateMultiPack() {
         var headerLines = [];
         for (var i of specials.concat(Object.keys(packs))) {
             if (inventory[i] > 0) {
-                var line = `${inventory[i]}x <img class="emoji" src="${emojisPath + i.toLowerCase()}pack.png">`;
+                var line = `${inventory[i]}x <img class="emoji" src="${packEmojisPath + i.toLowerCase()}pack.png">`;
                 headerLines.push(line);
             }
         }
@@ -541,7 +542,7 @@ function animateMultiPack() {
             }
             for (var i of catsArray) {
                 if (catsGot[i] > 0) {
-                    catLines.push(`<img class="emoji" src="${emojisPath}spawning/default/${i.toLowerCase()}cat.png"> x${catsGot[i]}`);
+                    catLines.push(`<img class="emoji" src="${catEmojisPath}${i.toLowerCase()}cat.png"> x${catsGot[i]}`);
                     totalValue += catsGot[i] * catsValuePool / cats[i];
                 }
             }
@@ -564,7 +565,7 @@ function animateMultiPack() {
 
 for (let i of specials.concat(Object.keys(packs))) {
     var a = buttonTemplate.content.cloneNode(true);
-    a.querySelector("img").src = emojisPath + i.toLowerCase() + "pack.png";
+    a.querySelector("img").src = packEmojisPath + i.toLowerCase() + "pack.png";
     let aSpan = a.querySelector("span");
     aSpan.textContent = i;
     // adding the button
