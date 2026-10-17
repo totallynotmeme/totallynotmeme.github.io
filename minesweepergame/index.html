@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:url" content="https://totallynotmeme.github.io/minesweepergame">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Minesweeper">
+  <meta property="og:description" content="(WIP) Just another minesweeper game in browser">
+  <!-- <meta property="og:image" content="https://example.com/example-image.jpg"> will add this later mb-->
+  <meta name="theme-color" content="#66ddff">
+  <title>Swipemeener</title>
+  <style>
+  * {
+    font-family: monospace;
+    text-align: center;
+    color: white;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+    font-weight: unset;
+  }
+  body {
+    background-color: black;
+    touch-action: manipulation;
+  }
+  span {
+    font-size: x-large;
+  }
+  input {
+    width: 50px;
+    background-color: black;
+    border: solid 1px white;
+    border-radius: 5px;
+    font-size: large;
+  }
+  select {
+    width: fit-content;
+    background-color: black;
+    border: solid 1px white;
+    border-radius: 5px;
+    font-size: large;
+  }
+  button {
+    background-color: black;
+    border: solid 1px white;
+    border-radius: 5px;
+    font-size: large;
+    transition-property: left;
+    transition-duration: 0.2s;
+    padding: 5px;
+  }
+  #grid {
+    display: grid;
+    grid-template-rows: repeat(5, 1fr);
+    grid-template-columns: repeat(5, 1fr);
+    border: solid #05a 2px;
+    width: 90%;
+    max-width: 90vh;
+  }
+  #menu {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #00000060;
+  }
+  #pauseButton {
+    position: absolute;
+    bottom: 10px;
+    left: 0;
+    right: 0;
+    font-size: x-large;
+    width: 200px;
+    margin: auto;
+  }
+  #resetButton {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    font-size: x-large;
+  }
+  .container {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+  }
+  .cell {
+    border: solid 1px #27b;
+    background-color: #059;
+    display: flex;
+    aspect-ratio: 1;
+    cursor: pointer;
+  }
+  .mineLabel {
+    margin: auto;
+    font-size: 2em;
+  }
+  .cell:hover {
+    border-color: #09f;
+  }
+  .opened {
+    background-color: #012;
+    border-color: #123;
+    cursor: unset;
+  }
+  .opened:hover {
+    border-color: #059;
+  }
+  .flag {
+    border: dashed 5px #f22;
+  }
+  .kaboom {
+    border-color: #f00;
+    background-color: #a00;
+  }
+  .label0 {color: #7f7f7f} .label1 {color: #6464ff}
+  .label2 {color: #ffff78} .label3 {color: #ff7878}
+  .label4 {color: #3232c8} .label5 {color: #961414}
+  .label6 {color: #64ffff} .label7 {color: #ffffff}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="grid"></div>
+  </div>
+  <div id="menu">
+    <h1>Yet Another Minesweeper Game</h1>
+    <h2>Press ESC to unpause</h2>
+    <div class="container">
+      <h1>Game settings</h1>
+      <span>Preset: <select id="gamePreset">
+        <option value="9/9/10">(Vanilla) Easy</option>
+        <option value="16/16/40">(Vanilla) Intermediate</option>
+        <option value="30/16/99">(Vanilla) Expert</option>
+        <option value="custom">Todo</option>
+      </select></span>
+      <br>
+      <span>Size X: <input id="sizeX" min="3" max="30"> tiles</span>
+      <span>Size Y: <input id="sizeY" min="3" max="30"> tiles</span>
+      <button id="swapXY">Flip grid</button>
+      <span>There are: <input id="mines" min="0" max="999"> mines</span>
+      <span>Game mode: <select id="gameMode">
+        <option value="normal">Normal</option>
+      </select></span>
+    </div>
+  </div>
+  <button id="pauseButton">Pause</button>
+  <button id="resetButton">Reset</button>
+<script>
+const menu = document.getElementById("menu");
+const grid = document.getElementById("grid");
+const pauseButton = document.getElementById("pauseButton");
+const resetButton = document.getElementById("resetButton");
+
+var paused = true;
+var doUpdate = true;
+var firstClick = true;
+var cellsLeft = 0;
+
+var gridSizeX = 9;
+var gridSizeY = 9;
+var mineCount = 0;
+var gridFlipped = false;
+
+const gamePreset = document.getElementById("gamePreset");
+const gameMode = document.getElementById("gameMode");
+const fieldSizeX = document.getElementById("sizeX");
+const fieldSizeY = document.getElementById("sizeY");
+const fieldMines = document.getElementById("mines");
+const buttonFlip = document.getElementById("swapXY");
+
+buttonFlip.onclick = function() {
+  let tmp = fieldSizeX.value;
+  fieldSizeX.value = fieldSizeY.value;
+  fieldSizeY.value = tmp;
+  gridFlipped = !gridFlipped;
+  doUpdate = true;
+}
+
+gamePreset.onchange = function() {
+  if (gamePreset.value == "custom") {return;}
+  var values = gamePreset.value.split("/");
+  if (gridFlipped) {
+    fieldSizeX.value = values[1];
+    fieldSizeY.value = values[0];
+  } else {
+    fieldSizeX.value = values[0];
+    fieldSizeY.value = values[1];
+  }
+  fieldMines.value = values[2];
+  doUpdate = true;
+}
+gamePreset.onchange();
+
+function normalizeField(el) {
+  if (!el.value || isNaN(el.value)) {el.value = -69420;}
+  if (+el.value < +el.min) {el.value = el.min;}
+  if (+el.value > +el.max) {el.value = el.max;}
+  el.value = Math.floor(el.value);
+  return el.value;
+}
+function onFieldChange(ev) {
+  var el = ev.target || ev;
+  normalizeField(el);
+  gamePreset.value = "custom";
+  doUpdate = true;
+}
+fieldSizeX.onchange = onFieldChange;
+fieldSizeY.onchange = onFieldChange;
+fieldMines.onchange = onFieldChange;
+gameMode.onchange = function() {doUpdate = true};
+
+
+function rigCell(cell, neighbours) {
+  for (var i=0; i<10; i++) {
+    let newCell = grid.children[Math.floor(Math.random() * grid.children.length)];
+    if (newCell === cell || newCell.mine || neighbours.includes(newCell)) {continue};
+    newCell.mine = "rigged kaboom";
+    cell.mine = "";
+    // console.log("rigged", cell, "to", newCell);
+    break;
+  } 
+}
+
+function cellOpen(ev) {
+  let cell = ev.target;
+  if (cell.classList.contains("flag")) {return};
+  if (cell.classList.contains("opened")) {
+    // check if we can flood-open completed cells
+    if (cell.ownNumber > 0) {
+      let flagNumber = 0;
+      for (var i of cell.neighbours) {
+        if (i.classList.contains("flag")) {flagNumber += 1};
+      }
+      if (flagNumber == cell.ownNumber) {
+        // do it
+        for (var i of cell.neighbours) {
+          if (!i.classList.contains("opened")) {
+            cellOpen({target: i});
+          }
+        }
+      }
+    }
+    return;
+  }
+  if (firstClick) {
+    // attempt to rig it
+    if (cell.mine) {
+      rigCell(cell, cell.neighbours);
+    }
+    
+    // also move nearby mines away
+    for (var i of cell.neighbours) {
+      if (i.mine) {
+        rigCell(i, cell.neighbours);
+      }
+    }
+  }
+  firstClick = false;
+  
+  if (cell.mine) {
+    cell.classList.add("kaboom");
+    return;
+  }
+  cell.classList.add("opened");
+  cellsLeft -= 1;
+  // win
+  if (cellsLeft == 0) {
+    grid.style.border = "solid #5f5 5px"
+  }
+  
+  let ownNumber = 0;
+  for (var i of cell.neighbours) {
+    if (i.mine) {ownNumber += 1};
+  }
+  if (ownNumber == 0) {
+    // flood open
+    setTimeout(()=>{
+      for (var i of cell.neighbours) {
+        cellOpen({target: i})
+      }
+    }, 40)
+  } else {
+    // create a number
+    let a = document.createElement("span");
+    a.textContent = ownNumber;
+    a.classList.add("mineLabel");
+    a.classList.add("label" + (ownNumber % 8));
+    cell.appendChild(a);
+    cell.ownNumber = ownNumber;
+  }
+}
+
+function cellFlag(ev) {
+  if (ev.target.classList.contains("opened")) {return};
+  ev.preventDefault();
+  ev.target.classList.toggle("flag");
+}
+
+function updateGridSize() {
+  while (grid.children.length > 0) {
+    grid.removeChild(grid.lastChild);
+  }
+  while (grid.children.length < gridSizeX*gridSizeY) {
+    var a = document.createElement("div");
+    a.className = "cell";
+    a.onclick = cellOpen;
+    a.oncontextmenu = cellFlag;
+    grid.appendChild(a);
+  }
+  grid.style.gridTemplateRows = "repeat(" + gridSizeY + ", 1fr)";
+  grid.style.gridTemplateColumns = "repeat(" + gridSizeX + ", 1fr)";
+  // neighbours scan
+  let offsets = [
+    -gridSizeX-1, -gridSizeX, -gridSizeX+1,
+    -1, 1,
+    gridSizeX-1, gridSizeX, gridSizeX+1,
+  ]
+  for (var i=0; i<grid.children.length; i++) {
+    let cell = grid.children[i];
+    let row = Math.floor(i / gridSizeX);
+    let col = i % gridSizeX;
+    cell.neighbours = [];
+    for (var newI of offsets) {
+      newI += i;
+      if ((newI < 0) || (newI >= gridSizeX*gridSizeY)) {continue}
+      let newRow = Math.floor(newI / gridSizeX);
+      if (Math.abs(row - newRow) > 1) {continue}
+      let newCol = newI % gridSizeX;
+      if (Math.abs(col - newCol) > 1) {continue}
+      cell.neighbours.push(grid.children[newI]);
+    }
+  }
+}
+
+function updateGrid() {
+  updateGridSize();
+  for (var i of grid.children) {
+    i.mine = "";
+    if (i.children.length > 0) {
+      i.remove(i.firstChild);
+    }
+  }
+  let minesLeft = Math.min(mineCount, gridSizeX * gridSizeY);
+  let freeCells = Array.from(grid.children);
+  for (var i=0; i<minesLeft; i++) {
+    let which = Math.floor(Math.random() * freeCells.length);
+    let cell = freeCells[which];
+    cell.mine = "kaboom";
+    freeCells.splice(which, 1);
+  }
+  doUpdate = false;
+  firstClick = true;
+  cellsLeft = freeCells.length;
+  grid.style.border = "";
+}
+
+function togglePause() {
+  paused = !paused;
+  if (paused) {
+    menu.style.display = "";
+  } else {
+    menu.style.display = "none";
+    // apply settings and ~resume the cycle~ let the player go
+    gridSizeX = parseInt(normalizeField(fieldSizeX));
+    gridSizeY = parseInt(normalizeField(fieldSizeY));
+    mineCount = parseInt(normalizeField(fieldMines));
+    if (doUpdate) {updateGrid()}
+  }
+}
+
+function keyEvent(ev) {
+  if (ev.key == "Escape") {
+    ev.preventDefault();
+    togglePause();
+  }
+  if (paused) {return};
+  if (ev.key == "r") {
+    updateGrid();
+  }
+  // todo? let you change the keybinds
+  if (ev.key == "z") {
+    for (var i of grid.children) {
+      if (i.matches(":hover")) {
+        cellOpen({target: i})
+      }
+    }
+  }
+  if (ev.key == "c") {
+    for (var i of grid.children) {
+      if (i.matches(":hover")) {
+        cellFlag({target: i, preventDefault: ()=>{}})
+      }
+    }
+  }
+}
+pauseButton.onclick = togglePause;
+resetButton.onclick = updateGrid;
+
+updateGridSize();
+addEventListener("keydown", keyEvent);
+</script>
+</body>
+</html>
