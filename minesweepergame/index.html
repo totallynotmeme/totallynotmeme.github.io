@@ -57,6 +57,7 @@
     border: solid #05a 2px;
     width: 90%;
     max-width: 90vh;
+    max-height: 90vw;
   }
   #menu {
     position: absolute;
@@ -102,7 +103,8 @@
   }
   .mineLabel {
     margin: auto;
-    font-size: 2em;
+    font-size: 2.5vh;
+    pointer-events: none;
   }
   .cell:hover {
     border-color: #09f;
@@ -141,7 +143,7 @@
         <option value="9/9/10">(Vanilla) Easy</option>
         <option value="16/16/40">(Vanilla) Intermediate</option>
         <option value="30/16/99">(Vanilla) Expert</option>
-        <option value="custom">Todo</option>
+        <option value="custom">Custom</option>
       </select></span>
       <br>
       <span>Size X: <input id="sizeX" min="3" max="30"> tiles</span>
@@ -153,8 +155,8 @@
       </select></span>
     </div>
   </div>
-  <button id="pauseButton">Pause</button>
-  <button id="resetButton">Reset</button>
+  <button id="pauseButton">(ESC) Pause</button>
+  <button id="resetButton">(R) Reset</button>
 <script>
 const menu = document.getElementById("menu");
 const grid = document.getElementById("grid");
