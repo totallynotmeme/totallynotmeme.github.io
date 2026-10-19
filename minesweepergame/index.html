@@ -15,7 +15,6 @@
     font-family: monospace;
     text-align: center;
     color: white;
-    overflow-x: hidden;
     user-select: none;
     -webkit-user-select: none;
     font-weight: unset;
@@ -55,7 +54,6 @@
     grid-template-rows: repeat(5, 1fr);
     grid-template-columns: repeat(5, 1fr);
     border: solid #05a 2px;
-    width: 90%;
     padding: 20px;
     overflow: auto;
   }
@@ -98,17 +96,15 @@
     border: solid 1px #27b;
     background-color: #059;
     display: flex;
-    min-width: 20px;
-    min-height: 20px;
-    aspect-ratio: 1;
+    width: 50px;
+    height: 50px;
     cursor: pointer;
   }
   .mineLabel {
     margin: auto;
-    font-size: x-large;
+    font-size: xx-large;
     pointer-events: none;
   }
-  .bigText {font-size: xx-large;}
   .cell:hover {
     border-color: #09f;
   }
@@ -301,10 +297,6 @@ function cellOpen(ev) {
     a.textContent = ownNumber;
     a.classList.add("mineLabel");
     a.classList.add("label" + (ownNumber % 8));
-    // scale text if needed
-    if (gridSizeX + gridSizeY <= 32) {
-      a.classList.add("bigText");
-    }
     cell.appendChild(a);
     cell.ownNumber = ownNumber;
   }
