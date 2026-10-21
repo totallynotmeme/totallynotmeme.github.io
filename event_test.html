@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="color-scheme" content="dark">
+  <meta property="og:url" content="https://totallynotmeme.github.io/event_test.html">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Event visualizer">
+  <meta property="og:description" content="Debug page to see what event listeners are receiving">
+  <meta name="theme-color" content="#66ddff">
+  <title>Event testing page</title>
+  <style>
+  * {
+    font-family: monospace;
+  }
+  .probe {
+    width: 250px;
+    height: 250px;
+    border: solid 1px white;
+    margin: 5px;
+    align-content: center;
+    text-align: center;
+    font-size: xxx-large;
+  }
+  #probeContainer {
+    display: flex;
+  }
+  #logContainer {
+    display: flex;
+    flex-direction: column;
+  }
+  #logContainer>span {
+    font-size: large;
+  }
+  </style>
+</head>
+<body>
+<div id="probeContainer">
+  <div class="probe">div</div>
+  <button class="probe">Button</button>
+</div>
+<div id="logContainer">
+  <span>Try hovering over / tapping the squares above</span>
+  <span>(this is a debug page for debugging stuff)</span>
+</div>
+<script>
+const logContainer = document.getElementById("logContainer");
+const blacklist = ["onmozfullscreenchange", "onmozfullscreenerror"];
+var eventList = {};
+var alreadyShown = [];
+
+function formatEvent(ev) {
+  return `${ev.type} x=${ev.x} y=${ev.y} key=${ev.key}`;
+}
+
+function printEvent(ev) {
+  if (alreadyShown.includes(ev.type)) {
+    let a = eventList[ev.type]
+    logContainer.insertBefore(a, logContainer.firstChild);
+    a.textContent = formatEvent(ev);
+    return
+  }
+  alreadyShown.push(ev.type);
+  var a = document.createElement("span");
+  a.textContent = formatEvent(ev);
+  logContainer.insertBefore(a, logContainer.firstChild);
+  eventList[ev.type] = a;
+  console.log(ev);
+}
+
+for (var thing of document.getElementsByClassName("probe")) {
+  for (var i in thing) {
+    if (i.startsWith("on") && !blacklist.includes(i)) {
+      thing[i] = printEvent;
+    }
+  }
+}
+</script>
+</body>
+</html>
