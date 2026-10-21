@@ -65,6 +65,11 @@
     height: 100vh;
     background-color: #00000060;
   }
+  #mineCounter {
+    position: fixed;
+    left: 5px;
+    top: 5px;
+  }
   #pauseButton {
     position: fixed;
     bottom: 10px;
@@ -155,6 +160,9 @@
       </select></span>
     </div>
   </div>
+  <span id="mineCounter">
+    <span id="mineCounterVal">0</span>/<span id="mineCounterMax">10</span> mines
+  </span>
   <button id="pauseButton">(ESC) Pause</button>
   <button id="resetButton">(R) Reset</button>
 <script>
@@ -162,11 +170,14 @@ const menu = document.getElementById("menu");
 const grid = document.getElementById("grid");
 const pauseButton = document.getElementById("pauseButton");
 const resetButton = document.getElementById("resetButton");
+const mineCounterVal = document.getElementById("mineCounterVal");
+const mineCounterMax = document.getElementById("mineCounterMax");
 
 var paused = true;
 var doUpdate = true;
 var firstClick = true;
 var cellsLeft = 0;
+var flagsMarked = 0;
 
 var gridSizeX = 9;
 var gridSizeY = 9;
@@ -242,6 +253,7 @@ function cellOpen(ev) {
       let flagNumber = 0;
       for (var i of cell.neighbours) {
         if (i.classList.contains("flag")) {flagNumber += 1};
+        if (i.classList.contains("kaboom")) {flagNumber += 1};
       }
       if (flagNumber == cell.ownNumber) {
         // do it
@@ -305,7 +317,14 @@ function cellOpen(ev) {
 function cellFlag(ev) {
   if (ev.target.classList.contains("opened")) {return};
   ev.preventDefault();
-  ev.target.classList.toggle("flag");
+  if (ev.target.classList.toggle("flag")) {
+    // added
+    flagsMarked++;
+  } else {
+    // removed
+    flagsMarked--;
+  }
+  mineCounterVal.textContent = flagsMarked;
 }
 
 function updateGridSize() {
@@ -364,6 +383,7 @@ function updateGrid() {
   firstClick = true;
   cellsLeft = freeCells.length;
   grid.style.border = "";
+  mineCounterMax.textContent = mineCount;
 }
 
 function togglePause() {
