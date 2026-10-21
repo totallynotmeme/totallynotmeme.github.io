@@ -297,14 +297,13 @@ function cellOpen(ev) {
   if (cell.classList.contains("flag")) {return};
   if (cell.classList.contains("opened")) {
     // check if we can flood-open completed cells
-    if (cell.ownNumber > 0) {
+    if (cell.ownNumber != 0) {
       let flagNumber = 0;
       for (var i of cell.neighbours) {
-        if (i.classList.contains("flag") || i.classList.contains("kaboom")) {
-          flagNumber += i.mine;
+        if (i.classList.contains("flag")) {
+          flagNumber += thisGamemode.mineValue(i);
         }
       }
-      console.log(flagNumber);
       if (flagNumber == cell.ownNumber) {
         // do it
         for (var i of cell.neighbours) {
