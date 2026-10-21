@@ -85,6 +85,9 @@
     bottom: 10px;
     font-size: x-large;
   }
+  #description {
+    font-size: large;
+  }
   .container {
     min-width: 100vw;
     min-height: 100vh;
@@ -105,6 +108,7 @@
     height: 50px;
     cursor: pointer;
   }
+  .brightCell {background-color: #6080a0}
   .mineLabel {
     margin: auto;
     font-size: xx-large;
@@ -145,9 +149,10 @@
     <div class="container">
       <h1>Game settings</h1>
       <span>Preset: <select id="gamePreset">
-        <option value="9/9/10">(Vanilla) Easy</option>
-        <option value="16/16/40">(Vanilla) Intermediate</option>
-        <option value="30/16/99">(Vanilla) Expert</option>
+        <option value="9/9/10/normal">(Vanilla) Easy</option>
+        <option value="16/16/40/normal">(Vanilla) Intermediate</option>
+        <option value="30/16/99/normal">(Vanilla) Expert</option>
+        <option value="20/12/100/doubles">(Double) Impossible</option>
         <option value="custom">Custom</option>
       </select></span>
       <br>
@@ -157,7 +162,10 @@
       <span>There are: <input id="mines" min="0" max="999"> mines</span>
       <span>Game mode: <select id="gameMode">
         <option value="normal">Normal</option>
+        <option value="doubles">Double edges</option>
+        <option value="antis">Anti-mines</option>
       </select></span>
+      <p id="description">hi bro</p>
     </div>
   </div>
   <span id="mineCounter">
@@ -199,21 +207,6 @@ buttonFlip.onclick = function() {
   doUpdate = true;
 }
 
-gamePreset.onchange = function() {
-  if (gamePreset.value == "custom") {return;}
-  var values = gamePreset.value.split("/");
-  if (gridFlipped) {
-    fieldSizeX.value = values[1];
-    fieldSizeY.value = values[0];
-  } else {
-    fieldSizeX.value = values[0];
-    fieldSizeY.value = values[1];
-  }
-  fieldMines.value = values[2];
-  doUpdate = true;
-}
-gamePreset.onchange();
-
 function normalizeField(el) {
   if (!el.value || isNaN(el.value)) {el.value = -69420;}
   if (+el.value < +el.min) {el.value = el.min;}
@@ -230,14 +223,69 @@ function onFieldChange(ev) {
 fieldSizeX.onchange = onFieldChange;
 fieldSizeY.onchange = onFieldChange;
 fieldMines.onchange = onFieldChange;
-gameMode.onchange = function() {doUpdate = true};
+
+defaultNeighbourhood = (X) => {return [
+    -X-1, -X, -X+1,
+      -1,        1,
+     X-1,  X,  X+1,
+]};
+doubleNeighbourhood = (X) => {return [
+    -X-1, -X, -X+1,
+      -1,        1,
+     X-1,  X,  X+1,
+     -X, -1, 1, X,
+]};
+
+gamemodes = {
+  "normal": {
+    "mineValue": ()=>{return 1},
+    "processCell": ()=>{},
+    "getNeighbourhood": defaultNeighbourhood,
+    "description": "Standard minesweeper. The number shows how many mines are in the nearby 8 cells",
+  },
+  "doubles": {
+    "mineValue": ()=>{return 1},
+    "processCell": ()=>{},
+    "getNeighbourhood": doubleNeighbourhood,
+    "description": "Same as standard, except mines touching edges with the current cell count as 2 mines",
+  },
+  "antis": {
+    "mineValue": (cell)=>{return (cell.x+cell.y)%2 == 0 ? 1 : -1},
+    "processCell": (cell)=>{if ((cell.x+cell.y)%2 == 1) {cell.classList.add("brightCell")}},
+    "getNeighbourhood": defaultNeighbourhood,
+    "description": "Mines in bright cells count as negative mines... wait what-",
+  },
+}
+var thisGamemode = gamemodes["normal"]
+gameMode.onchange = function() {
+  thisGamemode = gamemodes[gameMode.value];
+  description.textContent = thisGamemode["description"];
+  doUpdate = true;
+}
+
+gamePreset.onchange = function() {
+  if (gamePreset.value == "custom") {return}
+  var values = gamePreset.value.split("/");
+  if (gridFlipped) {
+    fieldSizeX.value = values[1];
+    fieldSizeY.value = values[0];
+  } else {
+    fieldSizeX.value = values[0];
+    fieldSizeY.value = values[1];
+  }
+  fieldMines.value = values[2];
+  gameMode.value = values[3];
+  gameMode.onchange();
+  doUpdate = true;
+}
+gamePreset.onchange();
 
 
 function rigCell(cell, neighbours) {
   for (var i=0; i<10; i++) {
     let newCell = grid.children[Math.floor(Math.random() * grid.children.length)];
     if (newCell === cell || newCell.mine || neighbours.includes(newCell)) {continue};
-    newCell.mine = "rigged kaboom";
+    newCell.mine = thisGamemode.mineValue(newCell);
     cell.mine = "";
     // console.log("rigged", cell, "to", newCell);
     break;
@@ -252,9 +300,11 @@ function cellOpen(ev) {
     if (cell.ownNumber > 0) {
       let flagNumber = 0;
       for (var i of cell.neighbours) {
-        if (i.classList.contains("flag")) {flagNumber += 1};
-        if (i.classList.contains("kaboom")) {flagNumber += 1};
+        if (i.classList.contains("flag") || i.classList.contains("kaboom")) {
+          flagNumber += i.mine;
+        }
       }
+      console.log(flagNumber);
       if (flagNumber == cell.ownNumber) {
         // do it
         for (var i of cell.neighbours) {
@@ -293,10 +343,14 @@ function cellOpen(ev) {
   }
   
   let ownNumber = 0;
+  let showNumber = false;
   for (var i of cell.neighbours) {
-    if (i.mine) {ownNumber += 1};
+    if (i.mine) {
+      ownNumber += i.mine;
+      showNumber = true;
+    }
   }
-  if (ownNumber == 0) {
+  if (!showNumber) {
     // flood open
     setTimeout(()=>{
       for (var i of cell.neighbours) {
@@ -308,9 +362,10 @@ function cellOpen(ev) {
     let a = document.createElement("span");
     a.textContent = ownNumber;
     a.classList.add("mineLabel");
-    a.classList.add("label" + (ownNumber % 8));
+    a.classList.add("label" + (ownNumber % 8 + 8) % 8);
     cell.appendChild(a);
     cell.ownNumber = ownNumber;
+    cell.showNumber = showNumber;
   }
 }
 
@@ -341,15 +396,15 @@ function updateGridSize() {
   grid.style.gridTemplateRows = "repeat(" + gridSizeY + ", 1fr)";
   grid.style.gridTemplateColumns = "repeat(" + gridSizeX + ", 1fr)";
   // neighbours scan
-  let offsets = [
-    -gridSizeX-1, -gridSizeX, -gridSizeX+1,
-    -1, 1,
-    gridSizeX-1, gridSizeX, gridSizeX+1,
-  ]
+  let offsets = thisGamemode.getNeighbourhood(gridSizeX);
   for (var i=0; i<grid.children.length; i++) {
     let cell = grid.children[i];
     let row = Math.floor(i / gridSizeX);
     let col = i % gridSizeX;
+    cell.x = col;
+    cell.y = row;
+    thisGamemode.processCell(cell);
+    
     cell.neighbours = [];
     for (var newI of offsets) {
       newI += i;
@@ -376,13 +431,14 @@ function updateGrid() {
   for (var i=0; i<minesLeft; i++) {
     let which = Math.floor(Math.random() * freeCells.length);
     let cell = freeCells[which];
-    cell.mine = "kaboom";
+    cell.mine = thisGamemode.mineValue(cell);
     freeCells.splice(which, 1);
   }
   doUpdate = false;
   firstClick = true;
   cellsLeft = freeCells.length;
   grid.style.border = "";
+  flagsMarked = 0;
   mineCounterMax.textContent = mineCount;
 }
 
